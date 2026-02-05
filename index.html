@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shadow Dom</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        .tooltip::before {
+            position: relative;
+            content: attr(tooltip);
+            color: white;
+            white-space: nowrap;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-bottom: 0.5rem;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        .disabled {
+            cursor: not-allowed;
+        }
+    </style>
+
+</head>
+
+<body>
+    <!-- Shadow Realm -->
+    <!-- <s-state> this state only exist in the children of this <div> -->
+    <!-- (s-effect is the default attr for effect but customs can be created like so -> s-effect-* | * represents diff marker.) -->
+
+    <div s-state="{count: 0, countType:'words'}">
+        <div class="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-purple-900 to-black">
+            <div s-class="$store.theme.dark ? 'bg-gray-950 text-white':'bg-white' "
+                class="rounded-lg shadow-2xl p-8 w-80">
+                <div class="flex items-center justify-center gap-3 mb-5">
+                    <span class="text-sm font-medium">Theme:</span>
+                    <button on:click="$store.theme.toggle()"
+                        class="relative inline-flex h-8 w-14 items-center rounded-full transition-colors"
+                        s-class="$store.theme.dark ? 'bg-purple-600' : 'bg-gray-300'">
+                        <span class="inline-block h-6 w-6 transform rounded-full bg-white transition-transform"
+                            s-style="{ transform: $store.theme.dark ? 'translateX(1.5rem)' : 'translateX(0.25rem)' }"></span>
+                    </button>
+                </div>
+                <h1 class="text-3xl font-bold text-center mb-2">Counter</h1>
+                <p class="text-center mb-6 text-sm text-gray-500">Shadow Realm | Demo</p>
+                <select id="count-type" s-value="countType" on:change="countType = $target.value"
+                    class="w-full p-3 mb-4 border-1 border-purple-500 rounded-lg focus:outline-none focus:border-purple-700 bg-white text-gray-800 font-semibold">
+                    <option value="letters">Letters</option>
+                    <option value="words">Words</option>
+                </select>
+                <textarea s-effect-upper
+                    s-effect="()=> count = $target.value.trim().split(/\s+/).filter(word => word.length > 1).length"
+                    id="input-source" on:input="() => {
+                        const isCountingLetters = countType === 'letters';
+                        const letterCount = v => v.trim().replace(/\s+/g, '').length;
+                        const wordCount = v => v.trim().split(/\s+/).filter(word => word.length > 1).length; // has to be at least two letters to be an actual word.
+
+                        const value = $target.value;
+                        count = isCountingLetters ? letterCount(value) : wordCount(value);
+                    }"
+                    class="w-full h-32 p-4 border-1 border-purple-500 rounded-lg focus:outline-none focus:border-purple-700 resize-none"
+                    placeholder="Type something...">hello world!</textarea>
+                <div class="mt-6 text-center flex flex-col">
+                    <div class="flex justify-center align-center gap-2">
+                        <p class="text-center mt-4 text-4xl font-bold text-red-400/10"
+                            s-style="{ display: count == 0 && 'none' }" s-text="count"></p>
+                        <p class="text-5xl font-bold text-purple-600" s-scroll-text="count"></p>
+                        <p class="text-center mt-4 text-4xl font-bold text-red-400/10"
+                            s-style="{ display: count == 0 && 'none' }" s-text="count"></p>
+                    </div>
+                    <p class="text-gray-600 mt-2" s-text="countType">---</p>
+                </div>
+                <button s-class="{tooltip: count > 0, disabled: count <= 0}" tooltip="**" on:click="count = 0"
+                    class="w-full mt-6 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition">Reset</button>
+            </div>
+        </div>
+    </div>
+
+
+
+
+    <!-- <div s-effect="console.log($store)" s-style="$store.theme.dark && 'background-color:darkgray;' "
+        class="bg-blue-100/50 border border-dashed border-gray-400 p-5 rounded w-100 m-auto my-10"
+        s-state="{count:0, increment(){this.count++}, decrement(){this.count--}}">
+        <p s-text="dark"></p>
+        <button on:click="increment()" class="py-1 px-2 rounded my-2 bg-white">+</button>
+        <button on:click="decrement()" class="py-1 px-2 rounded my-2 bg-white">-</button>
+
+        <div class="p-4 bg-blue-100 border-2 border-blue-500 rounded-lg" on:click="count++">
+            first level count: <span class="font-bold text-blue-600" s-text="count"></span>
+        </div>
+        <div s-state="{counter:1}" class="ml-6 mt-4">
+            <div s-effect="console.log($store)" class="p-4 bg-purple-100 border-2 border-purple-500 rounded-lg"
+                on:click="counter++">
+                second level count: <span class="font-bold text-purple-600" s-text="counter"></span> : from first
+                level: <span s-text="count"></span>
+            </div>
+        </div>
+        <button on:click="$store.theme.toggle()" class="py-1 px-2 rounded my-2 bg-white">click
+            me</button>
+        <p class="text-center mt-5 text-sm text-blue-950">click inside the boxes!</p>
+    </div> -->
+</body>
+<script type="module" src="./src/index.js"></script>
+
+</html>
