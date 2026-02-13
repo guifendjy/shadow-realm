@@ -1,12 +1,14 @@
 import { BINDING_PREFIX } from "../globals.js";
 import cleanupAttribute from "../utils/cleanupAttribute.js";
-import findAttributesByPattern from "../utils/createTreeWalkerFromRoot.js";
+import createWalkerFromNodeV2 from "../utils/createTreeWalkerFromRoot.js";
 
 export default function getBindings($reactives, $bindings) {
   if (!$reactives.size) return;
 
-  $reactives.forEach(({ EL_STATE }, el) => {
-    const bindings = findAttributesByPattern(el, { prefix: BINDING_PREFIX });
+  $reactives.forEach(({ EL_STATE, PARENT_STATE }, root) => {
+    const bindings = createWalkerFromNodeV2(root, {
+      prefix: BINDING_PREFIX,
+    });
 
     // get rid of HTLM_ATTRIBUTE it no longer used.
     bindings.forEach(({ ELEMENT, RAW_ATTRIBUTE, VALUE, HTML_ATTRIBUTE }) => {
@@ -16,11 +18,10 @@ export default function getBindings($reactives, $bindings) {
         HTML_ATTRIBUTE,
         VALUE,
         EL_STATE,
+        PARENT_STATE,
+        UNBIND: [],
       });
+      cleanupAttribute(ELEMENT, RAW_ATTRIBUTE);
     });
   });
-
-  $bindings.forEach(({ ELEMENT, RAW_ATTRIBUTE }) =>
-    cleanupAttribute(ELEMENT, RAW_ATTRIBUTE),
-  );
 }

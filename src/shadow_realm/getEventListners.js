@@ -1,35 +1,39 @@
 import createHandler from "../utils/createHandler.js";
 import { EVENT_LISTENER_PREFIX } from "../globals.js";
 import cleanupAttribute from "../utils/cleanupAttribute.js";
-import findAttributesByPattern from "../utils/createTreeWalkerFromRoot.js";
-import getTokenFromExpression from "../utils/getTokenFromExpression.js";
+import { createWalkerFromNode } from "../utils/createTreeWalkerFromRoot.js";
+import createProxyChain from "../utils/createProxyChain.js";
 
-export default function getAndAttachEventListener($reactives) {
-  const $events = new Map();
-
-  $reactives.forEach(({ EL_STATE }, el) => {
-    const results = findAttributesByPattern(el, {
+export default function getAndAttachEventListener($reactives, $registry) {
+  $reactives.forEach(({ EL_STATE }, root) => {
+    const eventListeners = createWalkerFromNode(root, {
       prefix: EVENT_LISTENER_PREFIX,
     });
-    $events.set(EL_STATE, results);
+
+    eventListeners.forEach((ev) => {
+      $registry.add({ ...ev, REMOVE_LISTENER: [], EL_STATE });
+      cleanupAttribute(ev.ELEMENT, ev.RAW_ATTRIBUTE);
+    });
   });
 
-  $events.forEach((RESULTS, EL_STATE) => {
-    RESULTS.forEach(
-      ({ VALUE: EXPRESSION, RAW_ATTRIBUTE, ELEMENT, HTML_ATTRIBUTE }) => {
-        const tokens = getTokenFromExpression(EXPRESSION);
-        const isInScope = tokens.some((tk) =>
-          !tk.startsWith("$store") ? true : tk in EL_STATE.__SCOPE,
-        );
+  $registry.forEach(
+    ({
+      VALUE: EXPRESSION,
+      HTML_ATTRIBUTE,
+      ELEMENT,
+      EL_STATE,
+      REMOVE_LISTENER,
+    }) => {
+      //       // this would help me avoid duplicate listeners
+      const SCOPE = createProxyChain(EL_STATE);
 
-        if (isInScope) {
-          // this would help me avoid duplicate listeners
-          const SCOPE = EL_STATE.__SCOPE;
-          const handlerFunction = createHandler(EXPRESSION, SCOPE);
-          ELEMENT.addEventListener(HTML_ATTRIBUTE, handlerFunction);
-          cleanupAttribute(ELEMENT, RAW_ATTRIBUTE);
-        }
-      },
-    );
-  });
+      const handlerFunction = createHandler(EXPRESSION, SCOPE);
+      ELEMENT.addEventListener(HTML_ATTRIBUTE, handlerFunction);
+
+      const removeListener = () =>
+        ELEMENT.removeEventListener(HTML_ATTRIBUTE, handlerFunction);
+
+      REMOVE_LISTENER.push(removeListener);
+    },
+  );
 }

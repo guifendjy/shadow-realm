@@ -14,7 +14,7 @@ const MEMO = new WeakMap(); // memoize results to limit DOM paint
  * <div s-class="'active inactive'"></div>
  */
 export default function ClassPlugin(Realm) {
-  Realm.directive("s-class", ({ el, expression, execute }) => {
+  Realm.directive("s-class", ({ el, expression, execute, context }) => {
     const result = execute(expression);
 
     if (result instanceof Object) {

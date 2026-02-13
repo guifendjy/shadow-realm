@@ -7,8 +7,8 @@
  * by setting the display style property based on expression evaluation.
  * When expression is truthy, display is set to "none"; otherwise, display is cleared.
  */
-export default function ShowPlugin(Realm) {
-  Realm.directive("s-show", ({ el, expression, execute }) => {
+export default function hideTogglePlugin(Realm) {
+  Realm.directive("s-hide", ({ el, expression, execute }) => {
     const result = execute(expression);
     if (result) {
       el.style.display = "";

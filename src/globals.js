@@ -5,10 +5,6 @@ const DATA_CENTER = new Set();
 // this can hold special helpers(is used when scoping any state)
 const helpers = {
   $uniid: uniqid,
-  // those will change based on the situation
-  $target: null,
-  $event: null,
-  $store: null, // store will be popluted with user created stores-> it will check if name collision. {'name': {reactive store}}
 };
 
 // constants
@@ -27,6 +23,5 @@ export {
   WHITELIST,
   S_EFFECT_PREFIX,
   DATA_CENTER,
-
   STORE_MARKER,
 };

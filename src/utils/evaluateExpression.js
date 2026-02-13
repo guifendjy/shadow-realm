@@ -17,7 +17,12 @@ const evaluator = (expression, scope) => {
 
     return result;
   } catch (e) {
-    console.error(`Shadow Realm Execution Error: "${expression}"`, e,"__SCOPE__:", scope);
+    console.error(
+      `Shadow Realm Execution Error: "${expression}"`,
+      e,
+      "__SCOPE:",
+      scope,
+    );
     return null;
   }
 };

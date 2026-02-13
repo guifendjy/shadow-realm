@@ -20,8 +20,9 @@ const MEMO = new WeakMap(); // memoize results to limit DOM paint
  * <div s-style="'color: red; font-size: 12px'"></div>
  */
 export default function StylePlugin(Realm) {
-  Realm.directive("s-style", ({ el, expression, execute }) => {
+  Realm.directive("s-style", ({ el, expression, execute, context }) => {
     const result = execute(expression);
+
 
     if (result instanceof Object) {
       setAttr(el, "style", result);

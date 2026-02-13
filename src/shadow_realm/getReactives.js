@@ -1,41 +1,41 @@
 import { STATE_DATA_ATTR } from "../globals.js";
 import { stripBrackets } from "../utils/strip.js";
 import cleanupAttribute from "../utils/cleanupAttribute.js";
-import evaluator from "../utils/evaluateExpression.js";
-import createProxy from "../utils/createProxy.js";
-import findAttributesByPattern from "../utils/createTreeWalkerFromRoot.js";
-import makeReative from "../utils/makeStateReactive.js";
-import R from "../directives/directiveRegitry.js";
+import createWalkerFromNodeV2 from "../utils/createTreeWalkerFromRoot.js";
+import parseExpressionCtx from "../utils/parseExpressionCtx.js";
 
-export default function getReactives(root, $reactives) {
+export default function getReactives(root, $reactives, context) {
   // PARENT_ELEMENT: Node | null;
   // ELEMENT: Node;
   // RAW_ATTRIBUTE: any;
   // HTML_ATTRIBUTE: any;
   // VALUE: any;
-  const results = findAttributesByPattern(root.parentElement ?? root, {
+  const results = createWalkerFromNodeV2(root, {
     target: stripBrackets(STATE_DATA_ATTR),
   });
 
   // if no state is declared then set those defaults
   if (!results.length) {
-    const EL_STATE = {
+    const EL_STATE = context ?? {
       primitives: {},
       signals: {},
       functions: {},
+      __PARENT_SCOPE: null,
     };
-    EL_STATE.__SCOPE = createProxy(EL_STATE); // create an empty SCOPE HERE, the way if a store or a state is in js instead.
     $reactives.set(root, { EL_STATE });
     return;
   }
 
   results.forEach(
     ({ ELEMENT: el, RAW_ATTRIBUTE, VALUE: expression, PARENT_ELEMENT }) => {
-      // parse the state from the attribute
+      // parseExpressionCtx the state from the attribute
 
-      const RAW_STATE = parse(expression);
+      const RAW_STATE = parseExpressionCtx(expression);
+      // poplutate the tree.
+      RAW_STATE.__PARENT_SCOPE =
+        context ?? $reactives.get(PARENT_ELEMENT)?.EL_STATE ?? null; // save the parent state in the current state this while I can cascade update the tree.
+
       // saves a proxy and parent if any.
-      RAW_STATE.__SCOPE = createProxy(RAW_STATE);
       $reactives.set(el, { EL_STATE: RAW_STATE });
 
       // cleanup
@@ -43,10 +43,3 @@ export default function getReactives(root, $reactives) {
     },
   );
 }
-
-const parse = (expression) => {
-  if (!expression?.trim()) return null;
-  // A very safe but limited parser (No logic, just data) ==> R._stateResolver handles state that have been defined outside of a Realm.
-  const result = evaluator(expression, R._stateResolver);
-  return makeReative(result);
-};

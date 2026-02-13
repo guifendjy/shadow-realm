@@ -12,7 +12,7 @@
  * // <input s-value="userInput" />
  */
 export default function ValuePlugin(Realm) {
-  Realm.directive("s-value", ({ el, value }) => {
-    el.value = value;
+  Realm.directive("s-value", ({ el, expression, execute }) => {
+    el.value = execute(expression);
   });
 }

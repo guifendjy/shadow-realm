@@ -3,10 +3,22 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Shadow Dom</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
+        html,
+        body {
+            overscroll-behavior: none;
+            touch-action: manipulation;
+        }
+
+        img {
+            /* Prevent haptic touch previews */
+            -webkit-touch-callout: none;
+            -webkit-user-drag: none;
+        }
+
         .tooltip::before {
             position: relative;
             content: attr(tooltip);
@@ -27,12 +39,13 @@
 
 </head>
 
-<body>
+<body s-class="$store.theme.dark && 'bg-slate-900' ">
     <!-- Shadow Realm -->
     <!-- <s-state> this state only exist in the children of this <div> -->
     <!-- (s-effect is the default attr for effect but customs can be created like so -> s-effect-* | * represents diff marker.) -->
 
-    <div s-state="{count: 0, countType:'words'}">
+    <!-- WORD COUNTER -->
+    <!-- <div s-state="{count: 0, countType:'words'}">
         <div class="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-purple-900 to-black">
             <div s-class="$store.theme.dark ? 'bg-gray-950 text-white':'bg-white' "
                 class="rounded-lg shadow-2xl p-8 w-80">
@@ -78,32 +91,262 @@
                     class="w-full mt-6 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition">Reset</button>
             </div>
         </div>
-    </div>
+    </div> -->
 
 
-
-
-    <!-- <div s-effect="console.log($store)" s-style="$store.theme.dark && 'background-color:darkgray;' "
-        class="bg-blue-100/50 border border-dashed border-gray-400 p-5 rounded w-100 m-auto my-10"
+    <!-- NESTED STATE DEMO -->
+    <!-- <div class="bg-blue-100/50 border border-dashed border-gray-400 p-5 rounded w-100 m-auto my-10"
         s-state="{count:0, increment(){this.count++}, decrement(){this.count--}}">
-        <p s-text="dark"></p>
-        <button on:click="increment()" class="py-1 px-2 rounded my-2 bg-white">+</button>
-        <button on:click="decrement()" class="py-1 px-2 rounded my-2 bg-white">-</button>
 
-        <div class="p-4 bg-blue-100 border-2 border-blue-500 rounded-lg" on:click="count++">
-            first level count: <span class="font-bold text-blue-600" s-text="count"></span>
+        <p s-text="$store.theme.dark"></p>
+
+        <div class="p-4 bg-blue-100 border-2 border-blue-500 rounded-lg">
+            first level count: <span class="font-bold text-blue-600 mx-5" s-text="count"></span>
+            <button on:click="increment()" class="py-1 px-2 rounded my-2 bg-white">+</button>
+            <button on:click="decrement()" class="py-1 px-2 rounded my-2 bg-white">-</button>
+
         </div>
         <div s-state="{counter:1}" class="ml-6 mt-4">
-            <div s-effect="console.log($store)" class="p-4 bg-purple-100 border-2 border-purple-500 rounded-lg"
-                on:click="counter++">
-                second level count: <span class="font-bold text-purple-600" s-text="counter"></span> : from first
-                level: <span s-text="count"></span>
+            <div class="p-4 bg-purple-100 border-2 border-purple-500 rounded-lg">
+                second level counter: <span class="font-bold text-purple-600" s-text="counter"></span> : from first
+                level count: <span s-text="count"></span>
+                <button on:click="counter++" class="py-1 px-2 rounded my-2 bg-white">+</button>
+                <button on:click="counter--" class="py-1 px-2 rounded my-2 bg-white">-</button>
+            </div>
+            <div class="ml-6 mt-4" s-state="{amount : 2}">
+                <div class="p-4 bg-purple-100 border-2 border-purple-500 rounded-lg">
+                    second level amount: <span class="font-bold text-purple-600" s-text="amount"></span> : from first
+                    level count: <span s-text="count"></span>
+                    <button on:click="amount++" class="py-1 px-2 rounded my-2 bg-white">+</button>
+                    <button on:click="amount--" class="py-1 px-2 rounded my-2 bg-white">-</button>
+                    <button on:click="decrement()" class="py-1 px-2 rounded my-2 bg-white">decrement count from root
+                        state</button>
+
+                </div>
             </div>
         </div>
         <button on:click="$store.theme.toggle()" class="py-1 px-2 rounded my-2 bg-white">click
             me</button>
         <p class="text-center mt-5 text-sm text-blue-950">click inside the boxes!</p>
     </div> -->
+
+    <!-- S-if demo -->
+    <!-- <div s-state="{isVisible:true}" id="app" class="min-h-screen bg-slate-900 text-slate-100 p-8 antialiased">
+        <div class="max-w-2xl mx-auto space-y-8">
+
+            <header class="border-b border-slate-700 pb-6">
+                <h1 class="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+                    Shadow Realm Inspector
+                </h1>
+                <p class="text-slate-400 mt-2">Testing <code class="text-pink-400 font-mono">s-if</code> lifecycle and
+                    memory cleanup.</p>
+            </header>
+
+            <section class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-xl">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-500">Global Control</h2>
+                        <p class="text-lg">Content Status:
+                            <span s-text="isVisible" class="font-mono text-cyan-400"></span>
+                        </p>
+                    </div>
+                    <button on:click="isVisible = !isVisible"
+                        class="px-6 py-2 bg-blue-600 hover:bg-blue-500 active:scale-95 transition-all rounded-lg font-medium shadow-lg shadow-blue-900/20">
+                        Toggle Realm
+                    </button>
+                </div>
+            </section>
+
+            <main
+                class="relative min-h-[200px] border-2 border-dashed border-slate-700 rounded-2xl flex items-center justify-center bg-slate-900/50">
+
+                <template s-if="isVisible">
+                    <div class="w-full p-4">
+                        <div
+                            class="bg-slate-800 border border-slate-600 rounded-xl p-6 shadow-2xl animate-in fade-in zoom-in duration-300">
+                            <div class="flex items-start justify-between">
+                                <div class="space-y-2">
+                                    <span
+                                        class="px-2 py-1 rounded bg-emerald-500/10 text-emerald-400 text-xs font-bold uppercase">Active
+                                        Realm</span>
+                                    <h3 class="text-xl font-semibold">Conditional Component</h3>
+                                    <p class="text-slate-400 text-sm">I am linked to the parent context. When I'm
+                                        destroyed,
+                                        all my listeners vanish.</p>
+                                </div>
+                            </div>
+
+                            <div s-state="{count:0}"
+                                class="mt-6 flex items-center gap-4 bg-slate-900/50 p-4 rounded-lg">
+                                <div class="text-center">
+                                    <div class="text-xs text-slate-500 uppercase tracking-tighter">Count Value</div>
+                                    <div s-text="count" class="text-3xl font-mono text-white"></div>
+                                </div>
+                                <button on:click="count++"
+                                    class="flex-1 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg font-mono text-sm transition-colors border border-slate-500/30">
+                                    INCREMENT_STATE()
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
+
+                <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-20"
+                    s-hide="!isVisible">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 mb-2" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+                            d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    <p class="text-sm italic">Realm is currently dormant...</p>
+                </div>
+
+            </main>
+
+            <footer class="bg-black/40 rounded-lg p-4 font-mono text-[11px] text-slate-500 border border-slate-800">
+                <div class="flex gap-2">
+                    <span class="text-blue-500">INFO:</span> Check Browser Console (F12) to see <code
+                        class="text-slate-300">destroy()</code> execution.
+                </div>
+            </footer>
+
+        </div>
+    </div> -->
+
+    <!-- s-for demo -->
+    <!-- <div s-state="{items: [1,2,3]}" class="min-h-screen bg-slate-900 text-slate-100 p-8 antialiased">
+        <button on:click="items = [...items, (Math.floor(Math.random() * 1000))]"
+            class="px-6 py-2 bg-blue-600 hover:bg-blue-500 active:scale-95 transition-all rounded-lg font-medium shadow-lg shadow-blue-900/20">
+            add to Array
+        </button>
+
+        <button on:click="items = items.slice(0, items.length - 1)"
+            class="px-6 py-2 bg-blue-600 hover:bg-blue-500 active:scale-95 transition-all rounded-lg font-medium shadow-lg shadow-blue-900/20">
+            remove from Array
+        </button>
+
+        <button on:click="()=>{
+            // Fisher–Yates shuffle (safe: no-op for arrays with < 2 items)
+            // Fisher–Yates shuffle
+
+            const arr = items.slice();
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            items = arr;
+        }"
+            class="px-6 py-2 bg-blue-600 hover:bg-blue-500 active:scale-95 transition-all rounded-lg font-medium shadow-lg shadow-blue-900/20">
+            shuffle Array
+        </button>
+        <template s-for="item in items">
+            <div class="p-2">
+                item:<span class="font-bold text-lg" s-text="item"></span> |
+                $index:<span class="font-bold text-lg" s-text="$index"></span>
+                <button class="mx-2 px-2 py-1 shadow-md bg-blue-600 text-gray rounded text-sm"
+                    on:click="alert($index)">alert index</button>
+                <template s-if="$index % 2 == 0">
+                    <span class="text-gray-500 font-light"> | nested s-if: index is even</span>
+                </template>
+            </div>
+        </template>
+    </div> -->
+
+
+    <!-- another demo -->
+    <div id="app" s-state="{ 
+                newTask: '', 
+                filter: 'all',
+                tasks: [
+                    { id: 1, text: 'Master Shadow Realm Proxies', done: true },
+                    { id: 2, text: 'Fix Nested s-for Scoping', done: false }
+                ] 
+
+            }" s-class="$store.theme.dark ? 'bg-slate-950 text-slate-200' : 'bg-slate-50 text-slate-900'"
+        class="min-h-screen p-4 md:p-12 antialiased transition-colors duration-500">
+
+        <div class="max-w-xl mx-auto space-y-8">
+            <header s-class="$store.theme.dark ? 'border-slate-800' : 'border-slate-200'"
+                class="flex items-end justify-between border-b border-slate-800 pb-6">
+                <div>
+                    <h1 s-class="$store.theme.dark ? 'text-white' : 'text-slate-900'"
+                        class="text-4xl font-black tracking-tighter text-white">TASKS</h1>
+                    <p class="text-slate-500 text-sm font-mono mt-1">Reactive State Management</p>
+                    <button on:click="$store.theme.dark = !$store.theme.dark"
+                        class="mt-2 text-[10px] uppercase tracking-[0.2em] font-bold px-3 py-1 rounded-full border transition-all"
+                        s-class="$store.theme.dark ? 'border-slate-700 hover:bg-slate-800 text-slate-400' : 'border-slate-300 hover:bg-slate-100 text-slate-600'">
+                        Switch to <span s-text="$store.theme.dark ? 'Light' : 'Dark'"></span> Mode
+                    </button>
+                </div>
+                <div class="text-right">
+                    <span class="text-3xl font-mono text-cyan-500" s-text="tasks.filter(t => !t.done).length"></span>
+                    <p class="text-[10px] uppercase tracking-widest text-slate-600">Pending</p>
+                </div>
+            </header>
+
+            <div class="relative group">
+                <input type="text" s-value="newTask" on:input="newTask = $target.value"
+                    on:keydown="$event.key === 'Enter' && newTask.trim() !== '' && (tasks = [...tasks, { id: $uniid(), text: newTask, done: false }], newTask = '')"
+                    placeholder="What needs to be done?"
+                    class="w-full bg-slate-900 border-2 border-slate-800 rounded-2xl px-6 py-4 outline-none focus:border-cyan-500/50 transition-all text-lg text-slate-400 shadow-2xl"
+                    s-class="$store.theme.dark ? 'bg-slate-900 border-slate-800 focus:border-cyan-500/50' : 'bg-white border-slate-200 focus:border-cyan-500'" />
+                <button
+                    on:click="newTask.trim() !== '' && (tasks = [...tasks, { id: $uniid(), text: newTask, done: false }], newTask = '')"
+                    class="absolute right-3 top-3 bottom-3 px-4 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl transition-all active:scale-95 font-bold">
+                    ADD
+                </button>
+            </div>
+
+            <div s-class="$store.theme.dark ? 'bg-slate-900 border-slate-800' : 'bg-slate-100 border-slate-200'"
+                class="flex gap-2 p-1 bg-slate-900 rounded-xl border border-slate-800">
+                <template s-for="f in ['all', 'active', 'completed']">
+                    <button on:click="filter = f" s-class="filter === f 
+                        ? ($store.theme.dark ? 'bg-slate-800 text-cyan-400' : 'bg-white text-cyan-600 shadow-sm') 
+                        : 'text-slate-500 hover:text-slate-400'"
+                        class="flex-1 py-2 rounded-lg text-xs uppercase font-bold tracking-widest transition-all"
+                        s-text="f"></button>
+                </template>
+            </div>
+
+            <div class="space-y-3">
+                <template s-for="task in tasks">
+                    <div s-hide="filter === 'all' || (filter === 'active' && !task.done) || (filter === 'completed' && task.done)"
+                        class="group flex items-center gap-4 bg-slate-900 border border-slate-800 p-4 rounded-2xl hover:border-slate-700 transition-all shadow-sm"
+                        s-class="($store.theme.dark ? 'bg-slate-900 border-slate-800 hover:border-slate-700 ' : 'bg-white border-slate-200 hover:border-slate-300 ') + (task.done ? 'opacity-50' : 'opacity-100')">
+                        <button on:click="tasks = tasks.map(t => t.id === task.id ? { ...t, done: !t.done } : t)"
+                            class="w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all"
+                            s-class="task.done ? 'bg-cyan-500 border-cyan-500' : 'border-slate-700 hover:border-cyan-500'">
+                            <span s-hide="task.done" class="text-slate-950 font-bold text-xs">✓</span>
+                        </button>
+
+                        <span class="flex-1 text-lg transition-all"
+                            s-class="(task.done ? 'line-through text-slate-500 ' : '') + ($store.theme.dark ? 'text-slate-200' : 'text-slate-800')"
+                            s-text="task.text"></span>
+
+                        <button on:click="tasks = tasks.filter(t => t.id !== task.id)"
+                            class="opacity-0 group-hover:opacity-100 p-2 text-slate-600 hover:text-red-400 transition-all">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+                    </div>
+                </template>
+            </div>
+
+            <footer
+                class="flex justify-between items-center text-[10px] text-slate-600 font-mono uppercase tracking-widest px-2">
+                <span s-text="`Total Tasks: ${tasks.length}`"></span>
+                <button on:click="tasks = tasks.filter(t => !t.done)" class="hover:text-cyan-500 transition-colors"
+                    s-hide="tasks.some(t => t.done)">
+                    Clear Completed
+                </button>
+            </footer>
+        </div>
+    </div>
+
 </body>
 <script type="module" src="./src/index.js"></script>
 

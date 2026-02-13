@@ -1,6 +1,6 @@
 import { S_EFFECT_PREFIX } from "../globals.js";
 import cleanupAttribute from "../utils/cleanupAttribute.js";
-import createWalkerFromNode from "../utils/createTreeWalkerFromRoot.js";
+import createWalkerFromNodeV2 from "../utils/createTreeWalkerFromRoot.js";
 
 /**
  * Processes reactive elements and registers their effect handlers.
@@ -26,19 +26,27 @@ import createWalkerFromNode from "../utils/createTreeWalkerFromRoot.js";
 export default function getEffects($reactives, $effects) {
   if (!$reactives.size) return;
 
-  let processed = new Set();
+  let processed = new WeakMap();
 
   $reactives.forEach(({ EL_STATE }, el) => {
-    const results = createWalkerFromNode(el, { prefix: S_EFFECT_PREFIX });
+    const results = createWalkerFromNodeV2(el, { prefix: S_EFFECT_PREFIX });
 
     results.forEach(({ RAW_ATTRIBUTE, ELEMENT, VALUE: EXPRESSION }) => {
-      if (!processed.has(EXPRESSION)) {
+      if (!processed.has(ELEMENT) && processed.get(ELEMENT) != EXPRESSION) {
+        // makes sure that it is unique
         // avoid registering same effect twice in different state logic.
-        processed.add(ELEMENT);
-        $effects.add({ ELEMENT, RAW_ATTRIBUTE, VALUE: EXPRESSION, EL_STATE });
+        processed.set(ELEMENT, EXPRESSION);
+
+        $effects.add({
+          ELEMENT,
+          RAW_ATTRIBUTE,
+          VALUE: EXPRESSION,
+          EL_STATE,
+        });
         cleanupAttribute(ELEMENT, RAW_ATTRIBUTE); // clean first here
       }
     });
   });
+
   processed = null;
 }

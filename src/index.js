@@ -9,8 +9,8 @@ R.store("theme", () => ({
 }));
 
 /**
- * NOTE: I should probably find a better way of gathering states 
- * and bindings and have a better arhitecture for proxies. 
+ * NOTE: I should probably find a better way of gathering states
+ * and bindings and have a better arhitecture for proxies.
  * if they are even necessary.
  */
 const app = new Realm();

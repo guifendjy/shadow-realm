@@ -1,5 +1,4 @@
 // s-text plugin
-import setAttr from "../../utils/setAttributeSmart.js";
 /**
  * Text Plugin for Shadow Realm
  * Registers a custom directive that sets the text content of an element
@@ -7,8 +6,7 @@ import setAttr from "../../utils/setAttributeSmart.js";
  * @returns {void}
  */
 export default function TextPlugin(Realm) {
-  Realm.directive("s-text", ({ el, value, execute, expression }) => {
-    // setAttr(el, "textContent", value);
+  Realm.directive("s-text", ({ el, execute, expression }) => {
     el.textContent = execute(expression);
   });
 }

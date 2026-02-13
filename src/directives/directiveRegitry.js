@@ -1,14 +1,28 @@
-import { BINDING_PREFIX } from "../globals.js";
+// will use this to handle all the plugins dynamicly (VITE)
+// const Modules = import.meta.glob("./plugins/*.js", { eager: true });
+
+// const plugins = Object.entries(Modules).map(([path, module]) => {
+//   if (!module.default)
+//     return console.error(`Error: expected a default export at ${path}`);
+//   R.use(module.default);
+// });
+
+// plugins
 import TextPlugin from "./plugins/s_text_plugin.js";
-import ShowPlugin from "./plugins/s_show_plugin.js";
+import hideTogglePlugin from "./plugins/s_hide_plugin.js";
 import EffectPlugin from "./plugins/s_effect_plugin.js";
 import ValuePlugin from "./plugins/s_value_plugin.js";
 import ClassPlgugin from "./plugins/s_class_plugin.js";
 import StylePlugin from "./plugins/s_style_plugin.js";
 import scrollTextPlugin from "./plugins/s_text_scroll_plugin.js";
 import upperCaseEffectPlugin from "./plugins/s-effect-upper.js";
-import makeReative from "../utils/makeStateReactive.js";
-import createProxy from "../utils/createProxy.js";
+import conditionalRenderPlugin from "./plugins/s_if_plugin.js";
+import dynamicRenderingPlugin from "./plugins/s_for_plugin.js";
+
+// utilities
+import { BINDING_PREFIX } from "../globals.js";
+import createContext from "../utils/createContext.js";
+import createProxyChain from "../utils/createProxyChain.js";
 
 // NOTE: these directives gets called everytime the state(any property used in or as a ternary expressi) the element depends on changes
 /**
@@ -43,19 +57,19 @@ import createProxy from "../utils/createProxy.js";
 export default class R {
   // Static storage for global directives
   static _globalDirectives = {};
+  
   static _stores = {}; //stores
   static _states = {}; // states
 
   static store(name, callback) {
-    const store_schema = makeReative(callback()); // this is the signals
-    store_schema._PROXY = createProxy(store_schema); // this is the proxy that will direct it where it need to get or set.
+    const store_schema = createContext(callback()); // this is the signals that holds binding methods and scedules updates.
+    store_schema.__PARENT_SCOPE = null;
     this._stores[name] = store_schema;
   }
 
   static _storeResolver = new Proxy(this._stores, {
     get(target, key) {
-      if (!(key in target)) return undefined;
-      if (key in target) return target[key]._PROXY;
+      if (key in target) return createProxyChain(target[key]);
       console.warn(`Store "${key}" does not exist.`);
       return {};
     },
@@ -94,10 +108,12 @@ export default class R {
 
 // apply plugins
 R.use(TextPlugin)
-  .use(ShowPlugin)
+  .use(hideTogglePlugin)
   .use(EffectPlugin)
   .use(ValuePlugin)
   .use(ClassPlgugin)
   .use(StylePlugin)
   .use(scrollTextPlugin)
-  .use(upperCaseEffectPlugin);
+  .use(upperCaseEffectPlugin)
+  .use(conditionalRenderPlugin)
+  .use(dynamicRenderingPlugin);
