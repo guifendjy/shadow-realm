@@ -1,12 +1,10 @@
-import createHandler from "../utils/createHandler.js";
 import { EVENT_LISTENER_PREFIX } from "../globals.js";
 import cleanupAttribute from "../utils/cleanupAttribute.js";
-import { createWalkerFromNode } from "../utils/createTreeWalkerFromRoot.js";
-import createProxyChain from "../utils/createProxyChain.js";
+import createWalkerFromNodeV2 from "../utils/createTreeWalkerFromRoot.js";
 
-export default function getAndAttachEventListener($reactives, $registry) {
+export default function getEventListeners($reactives, $registry) {
   $reactives.forEach(({ EL_STATE }, root) => {
-    const eventListeners = createWalkerFromNode(root, {
+    const eventListeners = createWalkerFromNodeV2(root, {
       prefix: EVENT_LISTENER_PREFIX,
     });
 
@@ -15,25 +13,4 @@ export default function getAndAttachEventListener($reactives, $registry) {
       cleanupAttribute(ev.ELEMENT, ev.RAW_ATTRIBUTE);
     });
   });
-
-  $registry.forEach(
-    ({
-      VALUE: EXPRESSION,
-      HTML_ATTRIBUTE,
-      ELEMENT,
-      EL_STATE,
-      REMOVE_LISTENER,
-    }) => {
-      //       // this would help me avoid duplicate listeners
-      const SCOPE = createProxyChain(EL_STATE);
-
-      const handlerFunction = createHandler(EXPRESSION, SCOPE);
-      ELEMENT.addEventListener(HTML_ATTRIBUTE, handlerFunction);
-
-      const removeListener = () =>
-        ELEMENT.removeEventListener(HTML_ATTRIBUTE, handlerFunction);
-
-      REMOVE_LISTENER.push(removeListener);
-    },
-  );
 }

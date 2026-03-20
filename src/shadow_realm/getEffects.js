@@ -42,6 +42,7 @@ export default function getEffects($reactives, $effects) {
           RAW_ATTRIBUTE,
           VALUE: EXPRESSION,
           EL_STATE,
+          EFFECT_CLEANUP: [],
         });
         cleanupAttribute(ELEMENT, RAW_ATTRIBUTE); // clean first here
       }

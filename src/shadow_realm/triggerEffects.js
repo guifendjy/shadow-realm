@@ -1,8 +1,7 @@
 import createHandler from "../utils/createHandler.js";
-import R from "../directives/directiveRegitry.js";
 import createProxyChain from "../utils/createProxyChain.js";
 
-export default function triggerEffects($effects, Realm) {
+export default function triggerEffects($effects, R) {
   if (!$effects.size) return;
 
   $effects.forEach(
@@ -11,6 +10,7 @@ export default function triggerEffects($effects, Realm) {
       RAW_ATTRIBUTE: DIRECTIVE_NAME,
       VALUE: EXPRESSION,
       EL_STATE,
+      EFFECT_CLEANUP,
     }) => {
       if (R._globalDirectives[DIRECTIVE_NAME]) {
         R._globalDirectives[DIRECTIVE_NAME]({
@@ -22,7 +22,10 @@ export default function triggerEffects($effects, Realm) {
               createProxyChain(EL_STATE),
               true,
             );
-            handler(ELEMENT); // runs effect and pass elment to make $target available in the scope.
+            const cleanup = handler(ELEMENT); // runs effect and pass elment to make $target available in the scope.
+            if (typeof cleanup === "function") {
+              EFFECT_CLEANUP.push(cleanup);
+            }
           },
         });
       }

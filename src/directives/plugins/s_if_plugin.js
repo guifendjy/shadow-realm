@@ -1,7 +1,9 @@
-import Realm from "../../shadow_realm/index.js";
+import Realm from "../../index.js"; 
 import uniqid from "../../utils/unniq.js";
+import BudgetQueue from "../../utils/taskBudget.js";
 
 const registry = new WeakMap();
+const realmQueue = new BudgetQueue();
 
 export default function conditionalRenderPlugin(R) {
   R.directive("s-if", ({ el, expression, execute, context }) => {
@@ -19,37 +21,38 @@ export default function conditionalRenderPlugin(R) {
       el.replaceWith(marker);
       registry.set(el, {
         marker,
-        lastRendered: null,
         realm: null,
         lastResult: null, // Track the toggle context
       });
     }
 
-    const data = registry.get(el);
-    const result = Boolean(execute(expression));
+    const render = () => {
+      const data = registry.get(el);
+      const result = Boolean(execute(expression));
 
-    // 2. GUARD: Only proceed if the condition actually changed
-    if (result === data.lastResult) return;
-    data.lastResult = result;
+      // 2. GUARD: Only proceed if the condition actually changed
+      if (result === data.lastResult) return;
+      data.lastResult = result;
 
-    if (result) {
-      // 3. MOUNT: Expression became true
-      const nodeTemplate = el.content.cloneNode(true); // Clone the fragment
-      const container = nodeTemplate.firstElementChild;
+      if (result) {
+        // 3. MOUNT: Expression became true
+        const nodeTemplate = el.content.cloneNode(true); // Clone the fragment
+        const container = nodeTemplate.firstElementChild;
 
-      // Initialize the Realm on the cloned content
-      const realm = new Realm(container, context);
-      realm.initialize();
+        // Initialize the Realm on the cloned content
+        const realm = data.realm ?? new Realm(container, context);
+        data.marker.after(realm.root);
+        if (!realm.ready) realm.initialize();
 
-      data.marker.after(realm.root);
-      data.lastRendered = realm.root;
-      data.realm = realm;
-    } else {
-      // 4. UNMOUNT: Expression became false
-      data.lastRendered?.remove();
-      data.realm?.destroy(); // Ensure your Realm has a destroy method to kill watchers
-      data.lastRendered = null;
-      data.realm = null;
-    }
+        data.realm = realm;
+      } else {
+        // 4. UNMOUNT: Expression became false
+        if (data.realm) {
+          data.realm.root.remove();
+        }
+      }
+    };
+
+    realmQueue.add(render);
   });
 }

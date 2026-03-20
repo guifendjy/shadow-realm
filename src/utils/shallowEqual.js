@@ -1,3 +1,6 @@
+// I think I need to make this less strict becasue changes
+//  my be difficult to find in complex data that shares a lot
+
 export default function shallowEqual(a, b) {
   if (a === b) return true;
   if (typeof a !== typeof b) return false;

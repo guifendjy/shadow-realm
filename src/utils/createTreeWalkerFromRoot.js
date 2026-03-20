@@ -1,5 +1,5 @@
 // Tree Walker to find all elements with attributes starting with "s-"
-import { stripPrefix, stripSuffix } from "./strip.js";
+// import { stripPrefix, stripSuffix } from "./strip.js";
 import uniqid from "./unniq.js";
 /**
  * Creates a tree walker to find and extract elements with matching attributes from a DOM node.
@@ -24,127 +24,12 @@ import uniqid from "./unniq.js";
  * @throws {Error} If both target and prefix/suffix are provided simultaneously
  *
  * @example
- * // Find all data-* attributes
+ * // Find all data-* attributes and creates a tree, each matches is aware of a parent withe the same prefix.
  * const matches = findAttributesByPattern(rootEl, { prefix: 'data-' });
  *
  * // Find specific attribute
  * const matches = findAttributesByPattern(rootEl, { target: 'aria-label' });
  */
-
-export function createWalkerFromNode(
-  el,
-  options = { prefix: null, suffix: null, target: null },
-) {
-  if (!options.prefix && !options.target && !options.suffix) {
-    throw new Error("Either prefix or target must be provided in options");
-  }
-
-  if (
-    (options.prefix && options.target) ||
-    (options.suffix && options.target)
-  ) {
-    throw new Error("Provide either prefix/suffix or target, not both");
-  }
-
-  const results = [];
-
-  // Helper function to process attributes so we don't repeat code
-  const processAttributes = (node) => {
-    for (const attr of node.attributes) {
-      if (
-        (options.suffix && attr.name.endsWith(options.suffix)) ||
-        (options.prefix && attr.name.startsWith(options.prefix)) ||
-        (options.target && attr.name === options.target)
-      ) {
-        results.push({
-          ID: uniqid("s_r_", 5),
-          ELEMENT: node,
-          RAW_ATTRIBUTE: attr.name,
-          HTML_ATTRIBUTE: options.prefix
-            ? stripPrefix(attr.name, options.prefix)
-            : options.suffix
-              ? stripSuffix(attr.name, options.suffix)
-              : attr.name,
-          VALUE: attr.value,
-        });
-      }
-    }
-  };
-
-  // 1. Process the root element FIRST
-  processAttributes(el);
-
-  // 2. Now walk the children
-  const walker = document.createTreeWalker(el, NodeFilter.SHOW_ELEMENT);
-  while (walker.nextNode()) {
-    processAttributes(walker.currentNode);
-  }
-
-  return results;
-}
-
-export function createWalkerFromNodeV1(
-  root,
-  options = { prefix: null, suffix: null, target: null },
-) {
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
-  const results = [];
-
-  // This tracks the chain of [data-state] elements we are currently inside
-  const realmStack = [];
-
-  while (walker.nextNode()) {
-    const el = walker.currentNode;
-
-    // 1. MAINTAIN THE STACK
-    // If the current element is NOT a descendant of the top of the stack,
-    // it means we've moved out of that realm. Pop until we find a parent or hit bottom.
-    while (
-      realmStack.length > 0 &&
-      !realmStack[realmStack.length - 1].contains(el)
-    ) {
-      realmStack.pop();
-    }
-
-    // 2. IDENTIFY REALMS
-    // If this element defines a new state, it becomes the new "Current Realm"
-    if (el.hasAttribute(options?.target)) {
-      realmStack.push(el);
-    }
-
-    // 3. CAPTURE BINDINGS
-    for (const attr of el.attributes) {
-      if (
-        (options.suffix && attr.name.endsWith(options.suffix)) ||
-        (options.prefix && attr.name.startsWith(options.prefix)) ||
-        (options.target && attr.name === options.target)
-      ) {
-        // Find the "Immediate Parent Realm"
-        // If the current element IS a data-state, its parent is the one ABOVE it in the stack.
-        // If it's just a regular element, its parent is the current top of the stack.
-        const isStateNode = attr.name === options?.target;
-        const parentIdx = isStateNode
-          ? realmStack.length - 2
-          : realmStack.length - 1;
-        const parentElement = parentIdx >= 0 ? realmStack[parentIdx] : null;
-
-        results.push({
-          PARENT_ELEMENT: parentElement,
-          ELEMENT: el,
-          RAW_ATTRIBUTE: attr.name,
-          HTML_ATTRIBUTE: options.prefix
-            ? stripPrefix(attr.name, options.prefix)
-            : options.suffix
-              ? stripSuffix(attr.name, options.suffix)
-              : attr.name,
-          VALUE: attr.value,
-        });
-      }
-    }
-  }
-
-  return results;
-}
 
 export default function createWalkerFromNodeV2(
   root,

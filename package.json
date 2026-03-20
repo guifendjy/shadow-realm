@@ -1,12 +1,19 @@
 {
-  "name": "shadow_realm",
+  "name": "shadow-realm",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "rollup -c",
+    "build:watch": "rollup -c -w"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": ""
+  "author": "Dads Guifendjy Paul",
+  "license": "MIT",
+  "description": "",
+  "devDependencies": {
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@rollup/plugin-terser": "^0.1.0",
+    "rollup": "^3.30.0"
+  }
 }

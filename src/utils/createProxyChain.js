@@ -1,5 +1,4 @@
-import { helpers, STORE_MARKER, WHITELIST } from "../globals.js";
-import R from "../directives/directiveRegitry.js";
+import { helpers, REF_MARKER, STORE_MARKER, WHITELIST } from "../globals.js";
 import findStateOwner from "./findStateOwner.js";
 
 // FIXME: this is populated during event firing.
@@ -13,64 +12,66 @@ const eventDetailsShorthands = {
 
 /**
  * Creates a proxy that traverses the __PARENT_SCOPE tree.
- * @param {Object} startState - The raw EL_STATE -> { primitives, signals, __SCOPE, __PARENT_SCOPE }object (not the proxy).
+ * @param {Object} startState - The raw EL_STATE -> { primitives, signals, __SCOPE, __PARENT_SCOPE } object (not the proxy).
  */
 
-export default function createProxyChain(startState) {
-  return new Proxy(Object.assign({}, startState), {
-    get(_, prop) {
-      if (typeof prop == "symbol") return;
+export default function createProxyChain(startState, R) {
+  return new Proxy(
+    Object.assign({}, startState.primitives, startState.functions),
+    {
+      get(_, prop) {
+        if (typeof prop == "symbol") return;
 
-      if (prop.startsWith(STORE_MARKER)) return R._storeResolver;
-      if (prop in helpers) return helpers[prop];
-      if (prop in eventDetailsShorthands) return eventDetailsShorthands[prop];
+        if (prop.startsWith(STORE_MARKER)) return R._storeResolver;
+        if (prop in helpers) return helpers[prop];
+        if (prop in eventDetailsShorthands) return eventDetailsShorthands[prop];
+        if (prop === REF_MARKER) return R._refResolver;
 
-      let current = startState;
-      while (current) {
-        // 1. Check if the property exists in this layer's signals or functions
-        if (current.signals && prop in current.signals) {
-          return current.signals[prop].value;
+        const found = findStateOwner(startState, prop);
+
+        if (found) {
+          if (prop in found.signals) return found.signals[prop].value;
+          if (prop in found.functions) return found.functions[prop];
         }
-        if (current.functions && prop in current.functions) {
-          return current.functions[prop];
+        return undefined;
+      },
+
+      set(_, prop, val) {
+        if (typeof prop == "symbol") return;
+
+        if (prop.startsWith(STORE_MARKER)) return R._storeResolver;
+        if (prop in helpers) helpers[prop] = val;
+        if (prop in eventDetailsShorthands) eventDetailsShorthands[prop] = val;
+
+        const found = findStateOwner(startState, prop);
+
+        if (found) {
+          if (prop in found.signals) {
+            found.signals[prop].value = val;
+            return true;
+          }
+          if (prop in found.functions) {
+            found.functions[prop] = val;
+            return true;
+          }
         }
 
-        // 2. Move up to the raw parent state
-        current = current.__PARENT_SCOPE;
-      }
+        return true;
+      },
 
-      // 3. Fallback to global eventDetailsShorthands or window if not found in the tree
-      return undefined;
-    },
+      has(_, prop) {
+        if (typeof prop == "symbol") return;
+        if (prop.startsWith(STORE_MARKER)) return true;
+        if (prop in helpers) return true;
+        if (prop in eventDetailsShorthands) return true;
+        if (prop === REF_MARKER) return true;
 
-    set(_, prop, val) {
-      if (typeof prop == "symbol") return;
-
-      if (prop.startsWith(STORE_MARKER)) return R._storeResolver;
-      if (prop in helpers) helpers[prop] = val;
-      if (prop in eventDetailsShorthands) eventDetailsShorthands[prop] = val;
-
-      let current = startState;
-      while (current) {
-        if (current.signals && prop in current.signals) {
-          current.signals[prop].value = val;
-          return true;
+        const found = findStateOwner(startState, prop);
+        if (found) {
+          return prop in found.signals || prop in found.functions;
         }
-        current = current.__PARENT_SCOPE;
-      }
-      return true;
+        if (WHITELIST.includes(prop)) return false; // Let the engine look at window here.
+      },
     },
-
-    has(_, prop) {
-      if (typeof prop == "symbol") return;
-      if (prop.startsWith(STORE_MARKER)) return true;
-      if (prop in helpers) return true;
-      if (prop in eventDetailsShorthands) return true;
-
-      const found = findStateOwner(startState, prop);
-
-      if (found) return prop in found.signals || prop in found.functions;
-      if (WHITELIST.includes(prop)) return false; // Let the engine look at window here.
-    },
-  });
+  );
 }

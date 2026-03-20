@@ -1,12 +1,11 @@
 import getTokensFromExpression from "../utils/getTokenFromExpression.js";
 import evaluator from "../utils/evaluateExpression.js";
-import R from "../directives/directiveRegitry.js";
 import { STORE_MARKER } from "../globals.js";
 import Signal from "../utils/Signal.js";
 import findStateOwner from "../utils/findStateOwner.js";
 import createProxyChain from "../utils/createProxyChain.js";
 
-export default function initializeBindings($bindings) {
+export default function initializeBindings($bindings, R) {
   if (!$bindings.size) return;
 
   $bindings.forEach(
@@ -25,8 +24,10 @@ export default function initializeBindings($bindings) {
       }
 
       const TOKENS = getTokensFromExpression(EXPRESSION).filter(
-        (v) => v.startsWith(STORE_MARKER) || findStateOwner(EL_STATE, v), // will only bind to token that are in state declared by user
+        (v) => v.startsWith(STORE_MARKER) || findStateOwner(EL_STATE, v), // will only bind token that are in state declared by user from this EL_STATE, then up the __PARENT_SCOPE tree.
       );
+
+      // console.log(getTokensFromExpression(EXPRESSION), EL_STATE)
 
       // these too down there needs to be cleaned up using same code if both cases.
       // if no tokens just connect to R (directives then the can handle it as they wish)
@@ -38,7 +39,7 @@ export default function initializeBindings($bindings) {
           value: null,
           context: EL_STATE,
           execute: (expression) => {
-            return evaluator(expression, createProxyChain(EL_STATE));
+            return evaluator(expression, createProxyChain(EL_STATE, R));
           },
         });
         return;
@@ -56,6 +57,7 @@ export default function initializeBindings($bindings) {
 
           if (STORE) {
             const signal = STORE.signals?.[SIGNAL_NAME];
+            STORE.__PARENT_SCOPE = EL_STATE; // crucial for chained proxy. provide additional context in case expression contains other variables.
 
             if (signal && signal instanceof Signal) {
               const unbind = signal.bind((newValue) => {
@@ -63,15 +65,17 @@ export default function initializeBindings($bindings) {
                   el: ELEMENT,
                   expression: EXPRESSION, // expression
                   value: newValue,
-                  context: EL_STATE,
+                  context: STORE,
                   execute: (expression) => {
-                    return evaluator(expression, createProxyChain(EL_STATE));
+                    return evaluator(expression, createProxyChain(STORE, R));
                   },
                 });
               });
               // save
               UNBIND.push(unbind);
             }
+          } else {
+            console.log(`Error: store does not exist: ${STORE_NAME}`);
           }
         } else {
           const FOUND = findStateOwner(EL_STATE, token);
@@ -86,11 +90,15 @@ export default function initializeBindings($bindings) {
                 value: newValue,
                 context: EL_STATE,
                 execute: (expression) => {
-                  return evaluator(expression, createProxyChain(EL_STATE));
+                  return evaluator(expression, createProxyChain(EL_STATE, R));
                 },
               });
             });
             UNBIND.push(unbind);
+          } else {
+            console.error(
+              `Error: token ${token} is not defined at: ${EL_STATE}`,
+            );
           }
         }
       });

@@ -29,3 +29,10 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+
+# demos
+index.html
+index.js
+
+#docs
+docs/

@@ -1,4 +1,3 @@
-import shallowEqual from "./shallowEqual.js";
 /**
  * Lightweight observable Signal.
  *
@@ -26,7 +25,7 @@ export default class Signal {
    * @param {T} newVal
    */
   set value(newVal) {
-    if (shallowEqual(this.#currentValue, newVal)) return;
+    if (this.#currentValue === newVal) return;
     this.#currentValue = newVal;
 
     Signal.#queue.add(this);

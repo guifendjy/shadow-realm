@@ -4,7 +4,12 @@ import cleanupAttribute from "../utils/cleanupAttribute.js";
 import createWalkerFromNodeV2 from "../utils/createTreeWalkerFromRoot.js";
 import parseExpressionCtx from "../utils/parseExpressionCtx.js";
 
-export default function getReactives(root, $reactives, context) {
+export default function getReactives(
+  root,
+  $reactives,
+  context = null,
+  stateResolver,
+) {
   // PARENT_ELEMENT: Node | null;
   // ELEMENT: Node;
   // RAW_ATTRIBUTE: any;
@@ -14,12 +19,13 @@ export default function getReactives(root, $reactives, context) {
     target: stripBrackets(STATE_DATA_ATTR),
   });
 
-  // if no state is declared then set those defaults
+  // if no state is declared then set a default context
   if (!results.length) {
     const EL_STATE = context ?? {
       primitives: {},
       signals: {},
       functions: {},
+      $refs: {},
       __PARENT_SCOPE: null,
     };
     $reactives.set(root, { EL_STATE });
@@ -28,15 +34,13 @@ export default function getReactives(root, $reactives, context) {
 
   results.forEach(
     ({ ELEMENT: el, RAW_ATTRIBUTE, VALUE: expression, PARENT_ELEMENT }) => {
+      // set existing context
+      const __PARENT_SCOPE =
+        context ?? $reactives.get(PARENT_ELEMENT)?.EL_STATE ?? null;
       // parseExpressionCtx the state from the attribute
-
-      const RAW_STATE = parseExpressionCtx(expression);
-      // poplutate the tree.
-      RAW_STATE.__PARENT_SCOPE =
-        context ?? $reactives.get(PARENT_ELEMENT)?.EL_STATE ?? null; // save the parent state in the current state this while I can cascade update the tree.
-
+      const ctx = parseExpressionCtx(expression, __PARENT_SCOPE,stateResolver);
       // saves a proxy and parent if any.
-      $reactives.set(el, { EL_STATE: RAW_STATE });
+      $reactives.set(el, { EL_STATE: ctx });
 
       // cleanup
       cleanupAttribute(el, RAW_ATTRIBUTE);

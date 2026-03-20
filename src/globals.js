@@ -1,10 +1,12 @@
 import uniqid from "./utils/unniq.js";
-//globals
-const DATA_CENTER = new Set();
+import debounce from "./utils/debounce.js";
+import throttle from "./utils/throttle.js";
 
 // this can hold special helpers(is used when scoping any state)
 const helpers = {
   $uniid: uniqid,
+  $debounce: debounce,
+  $throttle: throttle,
 };
 
 // constants
@@ -14,6 +16,7 @@ const BINDING_PREFIX = "s-";
 const EVENT_LISTENER_PREFIX = "on:";
 const S_EFFECT_PREFIX = "s-effect";
 const STORE_MARKER = "$store";
+const REF_MARKER = "$refs";
 
 export {
   helpers,
@@ -22,6 +25,6 @@ export {
   EVENT_LISTENER_PREFIX,
   WHITELIST,
   S_EFFECT_PREFIX,
-  DATA_CENTER,
   STORE_MARKER,
+  REF_MARKER,
 };
