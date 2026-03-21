@@ -3,17 +3,51 @@
   "version": "1.0.0",
   "main": "index.js",
   "type": "module",
+  "private": true,
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/shadow_realm.js"
+    },
+    "./min": {
+      "import": "./dist/shadow_realm.min.js"
+    }
+  },
+  "files": [
+    "dist/",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/guifendjy/shadow-realm"
+  },
   "scripts": {
     "build": "rollup -c",
-    "build:watch": "rollup -c -w"
+    "build:watch": "rollup -c -w",
+    "postbuild": "copyfiles -u 1 \"types/**.d.ts\" dist",
+    "pub:patch": "node publish.mjs patch",
+    "pub:minor": "node publish.mjs minor",
+    "pub:major": "node publish.mjs major"
   },
-  "keywords": [],
+  "keywords": [
+    "reactive",
+    "signals",
+    "dom-binding",
+    "framework",
+    "vanilla-js",
+    "state-management",
+    "lightweight",
+    "directives",
+    "shadow",
+    "realm"
+  ],
   "author": "Dads Guifendjy Paul",
   "license": "MIT",
-  "description": "",
+  "description": "A lightweight, reactive DOM framework built around a Signal-based reactivity system and a directive pipeline. Bind HTML attributes to JavaScript state — the DOM updates automatically whenever state changes. No virtual DOM, no build step required. Inspired by [Alpine.js](https://github.com/alpinejs/alpine).",
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-terser": "^0.1.0",
+    "copyfiles": "^2.4.1",
     "rollup": "^3.30.0"
   }
 }
