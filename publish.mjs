@@ -13,7 +13,7 @@ import { execSync } from "child_process";
 import { readFileSync, writeFileSync } from "fs";
 import { resolve } from "path";
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const log = {
   info: (msg) => console.log(`\x1b[36mℹ\x1b[0m  ${msg}`),
@@ -29,10 +29,9 @@ function run(cmd, opts = {}) {
       stdio: opts.silent ? "pipe" : "inherit",
       encoding: "utf8",
     });
-  } catch (err) {
+  } catch {
     if (opts.throws === false) return null;
-    log.error(`Command failed: ${cmd}`);
-    process.exit(1);
+    throw new Error(cmd);
   }
 }
 
@@ -40,23 +39,23 @@ function runSilent(cmd) {
   return run(cmd, { silent: true, throws: false })?.trim() ?? "";
 }
 
-// ─── Validate release type arg ───────────────────────────────────────────────
+// ─── Validate release type arg ────────────────────────────────────────────────
 
 const VALID_TYPES = ["patch", "minor", "major"];
 const releaseType = process.argv[2]?.toLowerCase();
 
 if (!VALID_TYPES.includes(releaseType)) {
   log.error(`Invalid release type: "${releaseType ?? ""}"`);
-  log.info(`Usage: node publish.mjs <patch|minor|major>`);
+  log.info("Usage: node publish.mjs <patch|minor|major>");
   process.exit(1);
 }
 
-// ─── Load package.json ───────────────────────────────────────────────────────
+// ─── Load package.json ────────────────────────────────────────────────────────
 
 const pkgPath = resolve(process.cwd(), "package.json");
 const pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
 
-// ─── Guard: uncommitted changes ──────────────────────────────────────────────
+// ─── Guard: uncommitted changes ───────────────────────────────────────────────
 
 log.step("Checking working tree...");
 
@@ -80,11 +79,10 @@ if (!["main", "master"].includes(branch)) {
 }
 log.success(`On branch: ${branch}`);
 
-// ─── Bump version ────────────────────────────────────────────────────────────
+// ─── Compute next version ─────────────────────────────────────────────────────
 
-log.step(`Bumping ${releaseType} version...`);
-
-const [major, minor, patch] = pkg.version.split(".").map(Number);
+const currentVersion = pkg.version;
+const [major, minor, patch] = currentVersion.split(".").map(Number);
 let nextVersion;
 
 if (releaseType === "patch") {
@@ -95,37 +93,61 @@ if (releaseType === "patch") {
   nextVersion = `${major + 1}.0.0`;
 }
 
+// ─── Rollback helper ──────────────────────────────────────────────────────────
+
+function rollback(reason) {
+  log.error(`${reason} — rolling back package.json to v${currentVersion}.`);
+  pkg.version = currentVersion;
+  writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf8");
+  log.warn(
+    `Rolled back to ${currentVersion}. Nothing was committed or pushed.`,
+  );
+  process.exit(1);
+}
+
+// ─── Bump version in package.json ────────────────────────────────────────────
+// Written now so npm publish picks up the new version.
+// Will be restored by rollback() if anything below fails.
+
+log.step(`Bumping ${releaseType} version...`);
 pkg.version = nextVersion;
 writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf8");
 log.success(`Version bumped: ${pkg.name}@${nextVersion}`);
 
-// ─── Build ───────────────────────────────────────────────────────────────────
+// ─── Build ────────────────────────────────────────────────────────────────────
 
 if (pkg.scripts?.build) {
   log.step("Running build...");
-  run("npm run build");
+  try {
+    run("npm run build");
+  } catch {
+    rollback("Build failed");
+  }
   log.success("Build complete.");
 } else {
   log.warn("No build script found in package.json, skipping.");
 }
 
-// ─── Publish to npm ──────────────────────────────────────────────────────────
+// ─── Publish to npm ───────────────────────────────────────────────────────────
 
 log.step("Publishing to npm...");
-
-// --no-git-checks because we are managing git ourselves
-run(`npm publish --no-git-checks --access public`);
+try {
+  // --no-git-checks because we manage git ourselves
+  run("npm publish --no-git-checks --access public");
+} catch {
+  rollback("Publish failed");
+}
 log.success(`Published ${pkg.name}@${nextVersion} to npm.`);
 
-// ─── Commit version bump ─────────────────────────────────────────────────────
+// ─── Commit version bump ──────────────────────────────────────────────────────
+// Only reached if publish succeeded — safe to commit now.
 
 log.step("Committing version bump...");
-
-run(`git add package.json`);
+run("git add package.json");
 run(`git commit -m "chore: release v${nextVersion}"`);
 log.success(`Committed: chore: release v${nextVersion}`);
 
-// ─── Tag + push — major only ─────────────────────────────────────────────────
+// ─── Tag + push — major only ──────────────────────────────────────────────────
 
 if (releaseType === "major") {
   log.step("Major release — creating git tag and pushing to GitHub...");
@@ -140,7 +162,7 @@ if (releaseType === "major") {
 } else {
   log.step("Pushing commit (no tag)...");
   run(`git push origin ${branch}`);
-  log.success(`Pushed commit to GitHub without a tag.`);
+  log.success("Pushed commit to GitHub without a tag.");
 
   log.warn(
     releaseType === "patch"
@@ -149,7 +171,7 @@ if (releaseType === "major") {
   );
 }
 
-// ─── Done ────────────────────────────────────────────────────────────────────
+// ─── Done ─────────────────────────────────────────────────────────────────────
 
 console.log(`
 \x1b[32m-------------------------------------\x1b[0m
