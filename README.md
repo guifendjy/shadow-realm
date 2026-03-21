@@ -1,6 +1,6 @@
 # Shadow Realm
 
-A lightweight, reactive DOM framework built around a Signal-based reactivity system and a directive pipeline. Bind HTML attributes to JavaScript state — the DOM updates automatically whenever state changes. No virtual DOM, no build step required.
+A lightweight, reactive DOM framework built around a Signal-based reactivity system and a directive pipeline. Bind HTML attributes to JavaScript state — the DOM updates automatically whenever state changes. No virtual DOM, no build step required. Inspired by [Alpine.js](https://github.com/alpinejs/alpine).
 
 ## Installation
 
@@ -225,7 +225,7 @@ Conditionally mounts and unmounts a `<template>` element's content. The cloned c
 
 ### `s-for`
 
-Renders a list from a `<template>`, using an LCS diff to minimize DOM operations on updates. Each iteration adds `item` and `$index` to scope.
+Renders a list from a `<template>`, using an LCS diff to minimize DOM operations on updates.
 
 ```html
 <template s-for="item in items">
@@ -375,6 +375,22 @@ Shadow.store("cart", () => ({
   total: 0,
 }));
 ```
+
+## State declarations
+States provide a way to declare state outside of the template
+
+```js
+Shadow.state("cart", () => ({
+  items: [],
+  total: 0,
+}));
+```
+
+use it like so
+```html
+<div s-state="cart"></div>
+```
+
 
 Access in templates with `$store.storeName.property`:
 
