@@ -5,11 +5,11 @@ A lightweight, reactive DOM framework built around a Signal-based reactivity sys
 ## Installation
 
 ```bash
-npm install shadow_realm
+npm install @guifendjy/shadow_realm
 ```
 
 ```js
-import Realm, { Shadow } from "shadow_realm";
+import Realm, { Shadow } from "@guifendjy/shadow_realm";
 ```
 
 ## Quick Start
@@ -21,7 +21,7 @@ import Realm, { Shadow } from "shadow_realm";
 </div>
 
 <script type="module">
-  import Realm from "shadow_realm";
+  import Realm from "@guifendjy/shadow_realm";
   new Realm(document.getElementById("app")).initialize();
 </script>
 ```
@@ -89,7 +89,7 @@ realm.destroy();
 The `Shadow` export is the global registry for directives, plugins, and stores. It is shared across all `Realm` instances.
 
 ```js
-import { Shadow } from "shadow_realm";
+import { Shadow } from "@guifendjy/shadow_realm";
 ```
 
 ### `Shadow.directive(name, handler)`

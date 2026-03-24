@@ -1,5 +1,5 @@
 {
-  "name": "shadow-realm",
+  "name": "@guifendjy/shadow-realm",
   "version": "1.0.0",
   "main": "index.js",
   "type": "module",
