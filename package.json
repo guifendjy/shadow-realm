@@ -6,10 +6,12 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/shadow_realm.js"
+      "import": "./dist/shadow_realm.js",
+      "types": "./dist/index.d.ts"
     },
     "./min": {
-      "import": "./dist/shadow_realm.min.js"
+      "import": "./dist/shadow_realm.min.js",
+      "types": "./dist/index.d.ts"
     }
   },
   "files": [
