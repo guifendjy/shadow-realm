@@ -106,8 +106,14 @@
 
 
     <!-- NESTED STATE DEMO -->
-    <!-- <div class="bg-blue-100/50 border border-dashed border-gray-400 p-5 rounded w-100 m-auto my-10"
+    <div class="bg-blue-100/50 border border-dashed border-gray-400 p-5 rounded w-100 m-auto my-10"
         s-state="{count:0, increment(){this.count++}, decrement(){this.count--}}">
+
+        <!-- small bug with using function in directive bindings with signals -->
+        <div s-state="Example">
+            <input type="number" s-value="amount" on:change="amount = $target.value">
+            <p s-text="format(amount)"></p>
+        </div>
 
         <p s-text="$store.theme.dark"></p>
 
@@ -139,7 +145,7 @@
         <button on:click="$store.theme.toggle()" class="py-1 px-2 rounded my-2 bg-white">click
             me</button>
         <p class="text-center mt-5 text-sm text-blue-950">click inside the boxes!</p>
-    </div> -->
+    </div>
 
     <!-- S-if demo -->
     <!-- <div s-state="{isVisible:true}" id="app" class="min-h-screen bg-slate-900 text-slate-100 p-8 antialiased">

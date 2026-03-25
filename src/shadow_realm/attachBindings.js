@@ -23,11 +23,11 @@ export default function initializeBindings($bindings, R) {
         );
       }
 
-      const TOKENS = getTokensFromExpression(EXPRESSION).filter(
-        (v) => v.startsWith(STORE_MARKER) || findStateOwner(EL_STATE, v), // will only bind token that are in state declared by user from this EL_STATE, then up the __PARENT_SCOPE tree.
-      );
-
-      // console.log(getTokensFromExpression(EXPRESSION), EL_STATE)
+      const TOKENS = getTokensFromExpression(EXPRESSION).filter((v) => {
+        if (v.startsWith(STORE_MARKER)) return true;
+        const found = findStateOwner(EL_STATE, v);
+        return found?.signals?.[v];
+      });
 
       // these too down there needs to be cleaned up using same code if both cases.
       // if no tokens just connect to R (directives then the can handle it as they wish)
