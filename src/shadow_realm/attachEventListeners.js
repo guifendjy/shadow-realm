@@ -12,6 +12,7 @@ export default function attachEventListeners($registry, R) {
     }) => {
       //       // this would help me avoid duplicate listeners
       const SCOPE = createProxyChain(EL_STATE, R);
+
       const handlerFunction = createHandler(EXPRESSION, SCOPE);
       ELEMENT.addEventListener(HTML_ATTRIBUTE, handlerFunction);
       const removeListener = () =>

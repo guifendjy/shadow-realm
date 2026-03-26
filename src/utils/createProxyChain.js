@@ -23,6 +23,7 @@ export default function createProxyChain(startState, R) {
         if (typeof prop == "symbol") return;
 
         if (prop.startsWith(STORE_MARKER)) return R._storeResolver;
+
         if (prop in helpers) return helpers[prop];
         if (prop in eventDetailsShorthands) return eventDetailsShorthands[prop];
         if (prop === REF_MARKER) return R._refResolver;
@@ -40,6 +41,7 @@ export default function createProxyChain(startState, R) {
         if (typeof prop == "symbol") return;
 
         if (prop.startsWith(STORE_MARKER)) return R._storeResolver;
+
         if (prop in helpers) helpers[prop] = val;
         if (prop in eventDetailsShorthands) eventDetailsShorthands[prop] = val;
 
