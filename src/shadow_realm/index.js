@@ -71,7 +71,7 @@ export default class Realm {
   initialize() {
     if (this.ready) return;
     initializeBindings(this.#bindings, R);
-    attachEventListeners(this.#eventListenerRegistry);
+    attachEventListeners(this.#eventListenerRegistry, R);
     triggerEffects(this.#effects, R);
 
     this.ready = true;
