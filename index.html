@@ -50,7 +50,7 @@
 
 <!-- directives will be ignore if there no state defined at or above element. ps: if no expression is assigned to state, it's context will be empty. -->
 
-<body s-class="$store.theme.dark && 'bg-slate-900' " s-state>
+<body s-state="{n: 0, getPercent: (n, sum)=> (n/sum*100).toFixed(2)}" s-class="$store.theme.dark && 'bg-slate-900' ">
     <!-- Shadow Realm -->
     <!-- <s-state> this state only exist in the children of this <div> -->
     <!-- (s-effect is the default attr for effect but customs can be created like so -> s-effect-* | * represents diff marker.) -->
@@ -106,12 +106,13 @@
 
 
     <!-- NESTED STATE DEMO -->
-    <div class="bg-blue-100/50 border border-dashed border-gray-400 p-5 rounded w-100 m-auto my-10"
+    <div s-style="{width: getPercent(n, 500) + '%', backgroundColor: 'rgba(59, 130, 246, 0.5)'}"
+        class="bg-blue-100/50 border border-dashed border-gray-400 p-5 rounded w-100 m-auto my-10"
         s-state="{count:0, increment(){this.count++}, decrement(){this.count--}}">
 
         <!-- small bug with using function in directive bindings with signals -->
         <div s-state="Example">
-            <input type="number" s-value="amount" on:change="amount = $target.value">
+            <input type="number" s-value="amount" on:change="n = $target.value">
             <p s-text="format(amount)"></p>
         </div>
 

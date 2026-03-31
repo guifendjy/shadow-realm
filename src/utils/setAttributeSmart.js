@@ -46,9 +46,10 @@ function applyValue(el, name, value) {
     if (typeof value === "object") {
       for (const [prop, val] of Object.entries(value)) {
         if (val) {
-          el.style.setProperty(prop, val);
+          // this is better than set property because it can handle css variables and other non camelCase properties
+          el.style[prop] = val;
         } else {
-          el.style.removeProperty(prop);
+          el.style[prop] = "";
         }
       }
     } else {

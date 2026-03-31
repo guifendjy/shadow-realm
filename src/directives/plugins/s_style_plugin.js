@@ -1,7 +1,5 @@
 import setAttr from "../../utils/setAttributeSmart.js";
 
-const MEMO = new WeakMap(); // memoize results to limit DOM paint
-
 /**
  * StylePlugin - Handles dynamic style binding for elements using s-style directive
  * @param {Object} Realm - The reactive framework realm instance
@@ -19,38 +17,49 @@ const MEMO = new WeakMap(); // memoize results to limit DOM paint
  * <!-- String style -->
  * <div s-style="'color: red; font-size: 12px'"></div>
  */
+const MEMO = new WeakMap(); // memoize results to limit DOM paint
 export default function StylePlugin(Realm) {
-  Realm.directive("s-style", ({ el, expression, execute, context }) => {
+  Realm.directive("s-style", ({ el, expression, execute }) => {
     const result = execute(expression);
+    const prev = MEMO.get(el);
+    if (prev === result) return; // No change if same reference
 
-
-    if (result instanceof Object) {
-      setAttr(el, "style", result);
-      return;
+    // Helper to convert style to object
+    function toStyleObject(style) {
+      if (typeof style === "object" && style !== null) return style;
+      if (typeof style === "string") {
+        const obj = {};
+        style.split(";").forEach((part) => {
+          const [prop, val] = part.split(":").map((s) => s.trim());
+          if (prop && val) {
+            const camelProp = prop.replace(/-([a-z])/g, (_, letter) =>
+              letter.toUpperCase(),
+            );
+            obj[camelProp] = val;
+          }
+        });
+        return obj;
+      }
+      return {};
     }
 
-    const styles =
-      MEMO.get(el) ||
-      (result
-        ? result
-            .trim()
-            .split(/;/)
-            .filter((s) => s)
-        : []);
+    const newStyles = toStyleObject(result);
+    const prevStyles = prev ? toStyleObject(prev) : {};
 
-    if (!MEMO.has(el)) MEMO.set(el, styles);
-
-    if (result) {
-      styles.forEach((style) => {
-        const [prop, val] = style.split(":").map((s) => s.trim());
-        el.style.setProperty(prop, val);
-      });
-    } else {
-      styles.forEach((style) => {
-        const [prop] = style.split(":").map((s) => s.trim());
-        el.style.removeProperty(prop);
-      });
-      MEMO.delete(el);
+    // Apply new or changed properties
+    for (const prop in newStyles) {
+      if (newStyles[prop] !== prevStyles[prop]) {
+        el.style[prop] = newStyles[prop];
+      }
     }
+
+    // Remove properties no longer present
+    for (const prop in prevStyles) {
+      if (!(prop in newStyles)) {
+        el.style[prop] = "";
+      }
+    }
+
+    MEMO.set(el, result);
   });
 }
