@@ -57,6 +57,7 @@ export default function dynamicRenderingPlugin(P) {
           $index: index,
         });
 
+
         const rowRealm = new Realm(
           el.content.cloneNode(true).firstElementChild,
           nodeState,

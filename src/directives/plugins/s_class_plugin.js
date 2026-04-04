@@ -14,15 +14,20 @@ const MEMO = new WeakMap(); // memoize results to limit DOM paint
  * <div s-class="'active inactive'"></div>
  */
 export default function ClassPlugin(Realm) {
-  Realm.directive("s-class", ({ el, expression, execute, context }) => {
+  Realm.directive("s-class", ({ el, expression, execute }) => {
     const result = execute(expression);
+    const isObjectBinding = result && result.constructor === Object;
 
-    if (result instanceof Object) {
+    if (isObjectBinding) {
+      const previousClasses = MEMO.get(el) || [];
+      previousClasses.forEach((cls) => el.classList.remove(cls));
+      MEMO.delete(el);
+
       setAttr(el, "class", result);
       return;
     }
 
-    const classes = result ? result.trim().split(/\s+/) : [];
+    const classes = typeof result === "string" ? result.trim().split(/\s+/) : [];
 
     classes.forEach((cls) => el.classList.add(cls));
 

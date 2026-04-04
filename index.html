@@ -50,18 +50,43 @@
 
 <!-- directives will be ignore if there no state defined at or above element. ps: if no expression is assigned to state, it's context will be empty. -->
 
-<body s-state="{n: 0, getPercent: (n, sum)=> (n/sum*100).toFixed(2)}" s-class="$store.theme.dark && 'bg-slate-900' " class="p-2">
+<body s-state="{n: 0, getPercent: (n, sum)=> (n/sum*100).toFixed(2)}" s-class="$store.theme.dark && 'bg-slate-900' "
+    class="p-2">
     <button on:click="$store.theme.toggle()"
         class="relative inline-flex h-6 w-12 items-center rounded-full transition-colors"
         s-class="$store.theme.dark ? 'bg-purple-600' : 'bg-gray-300'">
         <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
             s-style="{ transform: $store.theme.dark ? 'translateX(1.2rem)' : 'translateX(0.2rem)' }"></span>
     </button>
-    <div class="flex items-center gap-2">
+
+    <div s-state="{newNote:'', selectedId: null}" class="w-[30rem] m-auto">
+        <h2 class="text-xl font-bold mb-4 text-white">Notes App</h2>
+        <div class="mb-4">
+            <textarea s-value="newNote" on:input="newNote = $target.value" placeholder="Enter a note..."
+                class="w-full p-2 bg-slate-800 text-white border border-slate-600 rounded"></textarea>
+            <button on:click="()=>{$store.NotesStore.addNote('', newNote); newNote = ''; }"
+                class="mt-2 px-4 py-2 bg-blue-600 text-white rounded">Add Note</button>
+        </div>
+        <ul class="space-y-2">
+            <template s-for="note in $store.NotesStore.notes">
+                <li s-class="selectedId == note.id && 'border border-blue-500'" on:click="()=>{selectedId = note.id; newNote = note.content}"
+                    class="flex justify-between items-center p-2 bg-slate-700 rounded">
+
+                    <h3 s-text="note.title"></h3>
+                    <span s-text="note.content"></span>
+                    <p class="text-sm text-gray-400" s-text="new Date(note.createdAt).toLocaleString()"></p>
+                    <button on:click="()=> $store.NotesStore.deleteNote(note.id)" class="text-red-500">Delete</button>
+                </li>
+            </template>
+        </ul>
+    </div>
+
+
+    <!-- <div class="flex items-center gap-2">
         <p class="text-lg font-bold dark:text-white" s-text="$store.CounterStore.counter.count"></p>
         <button on:click="$store.CounterStore.increment()" class="px-2 py-1 bg-blue-500 text-white rounded">+</button>
         <button on:click="$store.CounterStore.decrement()" class="px-2 py-1 bg-red-500 text-white rounded">-</button>
-    </div>
+    </div> -->
 
     <!-- Shadow Realm -->
     <!-- <s-state> this state only exist in the children of this <div> -->
