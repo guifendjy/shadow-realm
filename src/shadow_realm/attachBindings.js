@@ -23,10 +23,10 @@ export default function initializeBindings($bindings, R) {
         );
       }
 
-      const TOKENS = getTokensFromExpression(EXPRESSION).filter((v) => {
-        if (v.startsWith(STORE_MARKER)) return true;
-        const found = findStateOwner(EL_STATE, v);
-        return found?.signals?.[v];
+      const TOKENS = getTokensFromExpression(EXPRESSION).filter((token) => {
+        if (token.startsWith(STORE_MARKER)) return true;
+        const found = findStateOwner(EL_STATE, token);
+        return found?.signals?.[token];
       });
 
       // these too down there needs to be cleaned up using same code if both cases.
@@ -51,7 +51,7 @@ export default function initializeBindings($bindings, R) {
           // RealmInstance._stores
           const tks = token.split(".");
           const STORE_NAME = tks[1];
-          const SIGNAL_NAME = tks.at(-1);
+          const SIGNAL_NAME = tks.at(2);
 
           const STORE = R._stores[STORE_NAME];
 

@@ -50,11 +50,9 @@ export default function createProxyChain(startState, R) {
         if (found) {
           if (prop in found.signals) {
             found.signals[prop].value = val;
-            return true;
           }
           if (prop in found.functions) {
             found.functions[prop] = val;
-            return true;
           }
         }
 

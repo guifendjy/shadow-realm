@@ -159,6 +159,24 @@ Child elements can declare their own `s-state`. They automatically inherit acces
 
 ---
 
+### Reactivity and State Updates
+
+When a state or store is defined via `s-state`, `Shadow.state(...)`, or `Shadow.store(...)`, the engine creates a reactive scope and converts every property into a `Signal` instance. That means the DOM is updated by signal notifications, not by mutating plain object/array properties in place.
+
+- `s-state="{ count: 0 }"` becomes an internal scope like `{ count: SignalInstance }`
+- If a directive reads `count`, it subscribes to that exact `count` signal
+  Example:
+
+```js
+// no DOM update
+state.user.name = "Bob";
+
+// triggers DOM update
+state.user = { ...state.user, name: "Bob" };
+```
+
+Because the engine tracks dependency access through proxies, it knows exactly which signals each directive depends on. When a signal changes, it dispatches updates only to those subscribers and the DOM updates automatically. In the current implementation, state mutation must happen by replacing the signal value rather than modifying nested data in place. A future proxy layer may allow direct mutation to be translated into signal updates.
+
 ## Directives
 
 All directive attributes are removed from the DOM after processing.
