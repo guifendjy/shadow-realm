@@ -1,11 +1,14 @@
 import { STORE_MARKER } from "../globals.js";
-// this returns any pottential property used in an expression
+// this returns any potential property used in an expression
 export default function getTokensFromExpression(expression) {
-  const tokens = expression
-    .replace(/(['"])(?:(?!\1|\\).|\\.)*\1/g, "") // Remove quoted substrings
-    .trim()
-    .split(/[^a-zA-Z_$\.]+/)
-    .filter(Boolean);
+  // Strip '?' characters to handle optional chaining
+  const cleanedExpression = expression.replace(/\?/g, "");
+
+  const tokens = [
+    ...(cleanedExpression
+      .replace(/(['"`])(?:(?!\1|\\).|\\.)*\1/g, "")
+      .match(/[$A-Za-z_][$\w]*(?:\.[A-Za-z_$][$\w]*)*/g) || []),
+  ];
 
   // removes duplicate and only returns the first part of the token
   // e.g. "a.b.c" will return "a"
