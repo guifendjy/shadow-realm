@@ -1,6 +1,6 @@
 {
   "name": "@guifendjy/shadow-realm",
-  "version": "2.0.6",
+  "version": "2.0.7",
   "main": "index.js",
   "type": "module",
   "types": "./dist/index.d.ts",
