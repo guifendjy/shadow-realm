@@ -19,7 +19,7 @@ export default function triggerEffects($effects, R) {
           execute: (expression) => {
             const handler = createHandler(
               expression,
-              createProxyChain(EL_STATE),
+              createProxyChain(EL_STATE, R),
               true,
             );
             const cleanup = handler(ELEMENT); // runs effect and pass elment to make $target available in the scope.
