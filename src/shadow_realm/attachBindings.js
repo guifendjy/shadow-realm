@@ -5,6 +5,10 @@ import Signal from "../utils/Signal.js";
 import findStateOwner from "../utils/findStateOwner.js";
 import createProxyChain from "../utils/createProxyChain.js";
 
+// NOTE: directives should handle complex expression themselves. parse and execute (while looking at the provided context) to get the favoured result.
+// complex expression could result in misaligned context.
+// ex: s-class="functionCallFromAnyStateOrStore(varIncurrentScope, $store.storeName.VarInThisStore) && 'classToApplyWhenTrue' "
+
 export default function initializeBindings($bindings, R) {
   if (!$bindings.size) return;
 
@@ -29,9 +33,7 @@ export default function initializeBindings($bindings, R) {
         return found?.signals?.[token];
       });
 
-      // these too down there needs to be cleaned up using same code if both cases.
-      // if no tokens just connect to R (directives then the can handle it as they wish)
-      // not in state
+      //Note: does not need a variable from state to apply value -> this sets static if no token was found.
       if (!TOKENS.length) {
         R._globalDirectives[DIRECTIVE_NAME]({
           el: ELEMENT,
@@ -43,7 +45,7 @@ export default function initializeBindings($bindings, R) {
           },
         });
         return;
-      } // don't do nothing -> this only for dynamic stuff not set initial state. the browser works best when setting initial values for class, style. etc...
+      }
 
       TOKENS.forEach((token) => {
         // handles stores
@@ -51,13 +53,11 @@ export default function initializeBindings($bindings, R) {
           // RealmInstance._stores
           const tks = token.split(".");
           const STORE_NAME = tks[1];
-          const SIGNAL_NAME = tks.at(2);
-
+          const SIGNAL_NAME = tks.at(2); // rest of props will be inside of the signal. ex: $store.StoreName.signals: {..context, ...(props: SignalInstances)}
           const STORE = R._stores[STORE_NAME];
 
           if (STORE) {
             const signal = STORE.signals?.[SIGNAL_NAME];
-            STORE.__PARENT_SCOPE = EL_STATE; // crucial for chained proxy. provide additional context in case expression contains other variables.
 
             if (signal && signal instanceof Signal) {
               const unbind = signal.bind((newValue) => {
@@ -65,13 +65,13 @@ export default function initializeBindings($bindings, R) {
                   el: ELEMENT,
                   expression: EXPRESSION, // expression
                   value: newValue,
-                  context: STORE,
+                  context: EL_STATE,
                   execute: (expression) => {
-                    return evaluator(expression, createProxyChain(STORE, R));
+                    return evaluator(expression, createProxyChain(EL_STATE, R));
                   },
                 });
               });
-              // save
+              // save to unbind later.
               UNBIND.push(unbind);
             }
           } else {

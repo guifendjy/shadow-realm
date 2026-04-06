@@ -4,7 +4,7 @@
  */
 export default function findStateOwner(currentState, key) {
   // 1. Safety check
-  if (!currentState) return null;
+  if (currentState === null) return null;
   // 2. Check if the key exists in this specific layer's data
   // We check signals (for data) or functions
   const hasSignal = currentState.signals && key in currentState.signals;
@@ -15,5 +15,12 @@ export default function findStateOwner(currentState, key) {
   }
   // 3. If not found, move up to the raw parent
   // Note: We use __PARENT_SCOPE which points to the RAW state, not the Proxy
-  return findStateOwner(currentState.__PARENT_SCOPE, key);
+  if (currentState.__PARENT_SCOPE)
+    try {
+      return findStateOwner(currentState.__PARENT_SCOPE, key);
+    } catch (error) {
+      if (error instanceof RangeError) {
+        console.error("Stack overflow caught!", error.stack, currentState);
+      }
+    }
 }

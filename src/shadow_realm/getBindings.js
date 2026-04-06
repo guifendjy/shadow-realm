@@ -5,7 +5,7 @@ import createWalkerFromNodeV2 from "../utils/createTreeWalkerFromRoot.js";
 export default function getBindings($reactives, $bindings) {
   if (!$reactives.size) return;
 
-  $reactives.forEach(({ EL_STATE, PARENT_STATE }, root) => {
+  $reactives.forEach(({ EL_STATE }, root) => {
     const bindings = createWalkerFromNodeV2(root, {
       prefix: BINDING_PREFIX,
     });
@@ -18,7 +18,6 @@ export default function getBindings($reactives, $bindings) {
         HTML_ATTRIBUTE,
         VALUE,
         EL_STATE,
-        PARENT_STATE,
         UNBIND: [],
       });
       cleanupAttribute(ELEMENT, RAW_ATTRIBUTE);

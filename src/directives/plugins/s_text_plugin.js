@@ -6,7 +6,7 @@
  * @returns {void}
  */
 export default function TextPlugin(Realm) {
-  Realm.directive("s-text", ({ el, execute, expression }) => {
+  Realm.directive("s-text", ({ el, execute, expression, context }) => {
     el.textContent = execute(expression);
   });
 }

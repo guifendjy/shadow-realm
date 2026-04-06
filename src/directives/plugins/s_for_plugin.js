@@ -2,6 +2,7 @@ import Realm from "../../index.js";
 import uniqid from "../../utils/unniq.js";
 import LCSDiffEngine from "../../utils/diffingEngine.js";
 import BudgetQueue from "../../utils/taskBudget.js";
+import Signal from "../../utils/Signal.js";
 
 const registry = new WeakMap();
 const realmQueue = new BudgetQueue();
@@ -56,7 +57,6 @@ export default function dynamicRenderingPlugin(P) {
           [itemName]: item,
           $index: index,
         });
-
 
         const rowRealm = new Realm(
           el.content.cloneNode(true).firstElementChild,

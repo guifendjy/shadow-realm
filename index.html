@@ -50,17 +50,35 @@
 
 <!-- directives will be ignore if there no state defined at or above element. ps: if no expression is assigned to state, it's context will be empty. -->
 
-<body s-state="{n: 0, getPercent: (n, sum)=> (n/sum*100).toFixed(2)}" s-class="$store.theme.dark && 'bg-slate-900' "
-    class="p-2">
+<body s-state s-class="$store.theme.dark && 'bg-slate-900' " class="p-2">
     <button on:click="$store.theme.toggle()"
         class="relative inline-flex h-6 w-12 items-center rounded-full transition-colors"
         s-class="$store.theme.dark ? 'bg-purple-600' : 'bg-gray-300'">
         <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
             s-style="{ transform: $store.theme.dark ? 'translateX(1.2rem)' : 'translateX(0.2rem)' }"></span>
     </button>
+    <header s-state="Example">
+
+    </header>
+    <!-- 
+    <div on:click="()=>{
+        clearInterval(intID); 
+        STATE = 0;
+    }" class="size-20 bg-green-500 rounded-full flex items-center justify-center text-white font-bold"
+        s-state="{STATE:0, intID:null}" s-effect="intID = setInterval(()=> STATE++, 1000)">
+
+        <div s-state>
+            <div s-state>
+                <div s-text="STATE"></div>
+            </div>
+        </div>
+    </div>
+    <p class="text-xs text-white">click circle to stop interval</p> -->
+
 
     <div s-state="{newNote:'', selectedId: null}" class="w-[30rem] m-auto">
         <h2 class="text-xl font-bold mb-4 text-white">Notes App</h2>
+
         <div class="mb-4">
             <textarea s-value="newNote" on:input="newNote = $target.value" placeholder="Enter a note..."
                 class="w-full p-2 bg-slate-800 text-white border border-slate-600 rounded"></textarea>
@@ -69,12 +87,16 @@
         </div>
         <ul class="space-y-2">
             <template s-for="note in $store.NotesStore.notes">
-                <li s-class="selectedId == note.id && 'border border-blue-500'" on:click="()=>{selectedId = note.id; newNote = note.content}"
+                <li s-effect="$store.NotesStore" s-class="selectedId == note.id && 'border border-blue-500'"
+                    on:click="()=>{selectedId = note.id; newNote = note.content}"
                     class="flex justify-between items-center p-2 bg-slate-700 rounded">
-
-                    <h3 s-text="note.title"></h3>
-                    <span s-text="note.content"></span>
-                    <p class="text-sm text-gray-400" s-text="new Date(note.createdAt).toLocaleString()"></p>
+                    <div class="flex flex-col gap-1">
+                        <p s-show="$store.NotesStore.notes.length && newNote.trim()" class="text-xs">
+                            writing new note</p>
+                        <h3 s-text="note.title"></h3>
+                        <span s-text="note.content"></span>
+                    </div>
+                    <p class="text-sm text-gray-400" s-text="new Date(note.createdAt)"></p>
                     <button on:click="()=> $store.NotesStore.deleteNote(note.id)" class="text-red-500">Delete</button>
                 </li>
             </template>
@@ -143,12 +165,11 @@
 
 
     <!-- NESTED STATE DEMO -->
-    <!-- <div s-style="{width: getPercent(n, 500) + '%', backgroundColor: 'rgba(59, 130, 246, 0.5)'}"
-        class="bg-blue-100/50 border border-dashed border-gray-400 p-5 rounded w-100 m-auto my-10"
+    <div class="bg-blue-100/50 border border-dashed border-gray-400 p-5 rounded w-100 m-auto my-10"
         s-state="{count:0, increment(){this.count++}, decrement(){this.count--}}">
 
         <div s-state="Example">
-            <input type="number" s-value="amount" on:change="n = $target.value">
+            <input type="number" s-value="amount" on:change="amount = $target.value">
             <p s-text="format(amount)"></p>
         </div>
 
@@ -182,7 +203,7 @@
         <button on:click="$store.theme.toggle()" class="py-1 px-2 rounded my-2 bg-white">click
             me</button>
         <p class="text-center mt-5 text-sm text-blue-950">click inside the boxes!</p>
-    </div> -->
+    </div>
 
     <!-- S-if demo -->
     <!-- <div s-state="{isVisible:true}" id="app" class="min-h-screen bg-slate-900 text-slate-100 p-8 antialiased">
