@@ -1,5 +1,6 @@
 import createHandler from "../utils/createHandler.js";
 import createProxyChain from "../utils/createProxyChain.js";
+import { default as ObserverRegistry } from "../utils/observer.js";
 
 export default function triggerEffects($effects, R) {
   if (!$effects.size) return;
@@ -10,22 +11,28 @@ export default function triggerEffects($effects, R) {
       RAW_ATTRIBUTE: DIRECTIVE_NAME,
       VALUE: EXPRESSION,
       EL_STATE,
-      EFFECT_CLEANUP,
     }) => {
       if (R._globalDirectives[DIRECTIVE_NAME]) {
-        R._globalDirectives[DIRECTIVE_NAME]({
-          el: ELEMENT,
-          expression: EXPRESSION, // expression
-          execute: (expression) => {
-            const handler = createHandler(
-              expression,
-              createProxyChain(EL_STATE, R),
-              true,
-            );
-            const cleanup = handler(ELEMENT); // runs effect and pass elment to make $target available in the scope.
-            if (typeof cleanup === "function") {
-              EFFECT_CLEANUP.push(cleanup);
-            }
+        ObserverRegistry.register({
+          element: ELEMENT,
+          onMount(TARGET) {
+            let cleanup;
+
+            R._globalDirectives[DIRECTIVE_NAME]({
+              el: TARGET,
+              expression: EXPRESSION, // expression
+              execute: (expression) => {
+                const handler = createHandler(
+                  expression,
+                  createProxyChain(EL_STATE, R),
+                  true,
+                );
+
+                cleanup = handler(TARGET); // runs effect and pass elment to make $target available in the scope.
+              },
+            });
+
+            if (cleanup) return cleanup;
           },
         });
       }

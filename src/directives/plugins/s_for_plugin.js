@@ -13,6 +13,13 @@ export default function dynamicRenderingPlugin(P) {
       throw new Error(`s-for requires a <template> element.`);
     }
 
+    if (el.content.childElementCount > 1) {
+      console.warn(
+        `Warning: <s-if> directive expects exactly one root element in the template. Found ${el.content.childElementCount}. Only the first element will be rendered.`,
+        el,
+      );
+    }
+
     if (!registry.has(el)) {
       const marker = document.createComment(uniqid("s-for", 5));
       el.replaceWith(marker);
@@ -58,10 +65,13 @@ export default function dynamicRenderingPlugin(P) {
           $index: index,
         });
 
-        const rowRealm = new Realm(
-          el.content.cloneNode(true).firstElementChild,
-          nodeState,
-        );
+        const nodeToRender = el.content.cloneNode(true).firstElementChild;
+        if (!nodeToRender)
+          return console.error(
+            "Error: Template content is empty or invalid at s-for:",
+            el,
+          );
+        const rowRealm = new Realm(nodeToRender, nodeState);
 
         entry = { realm: rowRealm };
         currentCursor.after(rowRealm.root);

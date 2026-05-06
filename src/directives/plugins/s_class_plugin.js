@@ -13,6 +13,8 @@ const MEMO = new WeakMap(); // memoize results to limit DOM paint
  * // String format: space-separated class names
  * <div s-class="'active inactive'"></div>
  */
+
+// NOTE: we should support '{"class-1 class-2": true}' format as well in the future, but for now we can just support object(key, value pairs) and string formats.
 export default function ClassPlugin(Realm) {
   Realm.directive("s-class", ({ el, expression, execute }) => {
     const result = execute(expression);
@@ -27,7 +29,8 @@ export default function ClassPlugin(Realm) {
       return;
     }
 
-    const classes = typeof result === "string" ? result.trim().split(/\s+/) : [];
+    const classes =
+      typeof result === "string" ? result.trim().split(/\s+/) : [];
 
     classes.forEach((cls) => el.classList.add(cls));
 

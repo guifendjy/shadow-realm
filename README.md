@@ -1,6 +1,6 @@
 # Shadow Realm
 
-A lightweight, reactive DOM framework built around a Signal-based reactivity system and a directive pipeline. Bind HTML attributes to JavaScript state — the DOM updates automatically whenever state changes. No virtual DOM, no build step required. Inspired by [Alpine.js](https://github.com/alpinejs/alpine).
+A lightweight, reactive DOM framework built around a Signal-based reactivity system and a directive pipeline. Bind HTML attributes to JavaScript state — the DOM updates automatically whenever state changes. No virtual DOM and no build step required. Inspired by [Alpine.js](https://github.com/alpinejs/alpine).
 
 ## Installation
 
@@ -136,10 +136,10 @@ Shadow.state("counter", (start = 0) => ({ count: start }));
 
 ## Declaring State
 
-Use the `s-state` attribute to declare a reactive scope on any element. The value is a plain JavaScript object expression.
+Use the `s-state` attribute to declare a reactive scope on any element. The value is a plain JavaScript object expression. It can include an `init` method that will be executed during the Realm's initialization.
 
 ```html
-<div s-state="{ name: 'Alice', count: 0 }">
+<div s-state="{ name: 'Alice', count: 0, init(){...} }">
   <span s-text="name"></span>
 </div>
 ```
@@ -165,7 +165,8 @@ When a state or store is defined via `s-state`, `Shadow.state(...)`, or `Shadow.
 
 - `s-state="{ count: 0 }"` becomes an internal scope like `{ count: SignalInstance }`
 - If a directive reads `count`, it subscribes to that exact `count` signal
-  Example:
+
+Example:
 
 ```js
 // no DOM update
@@ -175,7 +176,7 @@ state.user.name = "Bob";
 state.user = { ...state.user, name: "Bob" };
 ```
 
-Because the engine tracks dependency access through proxies, it knows exactly which signals each directive depends on. When a signal changes, it dispatches updates only to those subscribers and the DOM updates automatically. In the current implementation, state mutation must happen by replacing the signal value rather than modifying nested data in place. A future proxy layer may allow direct mutation to be translated into signal updates.
+Because the engine tracks dependency access through proxies, it knows exactly which signals each directive depends on. When a signal changes, it notifies only those subscribers and the DOM updates automatically. In the current implementation, state mutation must happen by replacing the signal value rather than modifying nested data in place. A future proxy layer may allow direct mutation to be translated into signal updates.
 
 ## Directives
 
@@ -379,13 +380,23 @@ These are available inside any directive expression or event handler.
 | `$target`                  | Current event target (event handlers only) |
 | `$index`                   | Current loop index (inside `s-for` only)   |
 
-Standard globals `console`, `Math`, `Date`, `JSON`, and `parseInt` are also available.
+Standard globals such as `console`, `Math`, `Date`, `JSON`, and `parseInt` are also available.
 
 ---
 
 ## Stores
 
-Stores provide shared reactive state accessible from any Realm on the page.
+Stores provide shared reactive state accessible from any Realm on the page. They support a built-in `init` method that runs during initialization.
+
+```js
+Shadow.store("cart", () => ({
+  items: [],
+  total: 0,
+  init() {
+    console.log("Cart initialized");
+  },
+}));
+```
 
 ```js
 Shadow.store("cart", () => ({
@@ -396,7 +407,7 @@ Shadow.store("cart", () => ({
 
 ## State declarations
 
-States provide a way to declare state outside of the template
+State declarations provide a way to declare state outside of the template. They also support the built-in `init` method.
 
 ```js
 Shadow.state("cart", () => ({
@@ -405,7 +416,7 @@ Shadow.state("cart", () => ({
 }));
 ```
 
-use it like so
+Use it like this:
 
 ```html
 <div s-state="cart"></div>
@@ -474,12 +485,8 @@ function UpperCaseEffect(Shadow) {
 
 ### Contributing
 
----
-
-Found a bug or have a feature suggestion? Feel free to open an issue or submit a pull request! feel free to fork this repo.
+Found a bug or have a feature suggestion? Feel free to open an issue, submit a pull request, or fork the repository.
 
 ### License
-
----
 
 MIT © 2025 Dads Guifendjy Paul

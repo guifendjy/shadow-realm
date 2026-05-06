@@ -102,17 +102,6 @@ export default class Realm {
       this.#bindings.clear();
     }
 
-    if (this.#effects.size > 0) {
-      this.#effects.forEach((effect) => {
-        if (Array.isArray(effect.EFFECT_CLEANUP)) {
-          effect.EFFECT_CLEANUP.forEach((cleanup) => {
-            if (typeof cleanup === "function") cleanup();
-          });
-        }
-      });
-      this.#effects.clear();
-    }
-
     // 3. Wipe the State Maps
     this.#reactives.clear();
     this.ready = false;

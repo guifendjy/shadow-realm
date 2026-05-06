@@ -16,11 +16,14 @@ export default function showElementPlugin(Realm) {
       el.style.display = isVisible ? el._originalDisplay : "none";
 
       // 3. Accessibility: Update aria-hidden for screen readers
-      if (isVisible) {
-        el.removeAttribute("aria-hidden");
-      } else {
-        el.setAttribute("aria-hidden", "true");
-      }
+      // NOTE: this triggers warning in case an element an element stays focus while aria-hidden is true
+      // proposed solution
+      // js`document.activeElement && el.contains(document.activeElement)`
+      // if (isVisible) {
+      //   el.removeAttribute("aria-hidden");
+      // } else {
+      //   el.setAttribute("aria-hidden", "true");
+      // }
     };
 
     // 4. Initial Execution
