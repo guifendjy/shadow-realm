@@ -1,4 +1,5 @@
 import Signal from "./Signal.js";
+import createProxyChain from "./createProxyChain.js";
 
 /**
  * Creates a reactive context container for a Realm.
@@ -11,7 +12,7 @@ import Signal from "./Signal.js";
 
 //NOTE: that's what a R.store(...) or a R.state(...) is, same as state declared in html with the `s-state` directive.
 // it is mean to seperate concerns. signals are used to subscibe registered directives used in on a node.
-export default function createContext(raw_state = {}, parentContext = null) {
+export default function createContext(raw_state = {}, parentContext = null, R) {
   // init call
   if (raw_state.init && typeof raw_state.init === "function") {
     const initResult = raw_state.init();
@@ -52,6 +53,19 @@ export default function createContext(raw_state = {}, parentContext = null) {
     extendContext,
     __PARENT_SCOPE: parentContext,
   };
+
+  // 2. Create the Proxy so that 'this' inside init() points to the reactive state
+  const proxy = createProxyChain(context, R);
+
+  // 3. Trigger init AFTER reactivity is set up
+  if (functions.init) {
+    // Use .call(proxy) so 'this.count++' inside init triggers the Signal setters
+    const initResult = functions.init.call(proxy);
+
+    if (initResult instanceof Promise) {
+      initResult.catch((error) => console.error("Async Init Error:", error));
+    }
+  }
 
   return context;
 }
