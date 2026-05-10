@@ -13,13 +13,6 @@ import createProxyChain from "./createProxyChain.js";
 //NOTE: that's what a R.store(...) or a R.state(...) is, same as state declared in html with the `s-state` directive.
 // it is mean to seperate concerns. signals are used to subscibe registered directives used in on a node.
 export default function createContext(raw_state = {}, parentContext = null, R) {
-  // init call
-  if (raw_state.init && typeof raw_state.init === "function") {
-    const initResult = raw_state.init();
-    if (initResult && typeof initResult.then === "function") {
-      initResult.catch((error) => console.error("Error in async init:", error));
-    }
-  }
   const primitives = {};
   const signals = {};
   const functions = {};
