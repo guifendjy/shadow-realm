@@ -43,6 +43,7 @@ export default function conditionalRenderPlugin(R) {
 
       if (result) {
         // 3. MOUNT: Expression became true
+
         const nodeTemplate = el.content.cloneNode(true); // Clone the fragment
         const container = nodeTemplate.firstElementChild;
         if (!container)
@@ -76,8 +77,6 @@ export default function conditionalRenderPlugin(R) {
         // 4. UNMOUNT: Expression became false
         if (data.realm) {
           data.realm.root.remove();
-          // Note: we could optimize this by keeping the realm alive
-          data.realm.destroy();
         }
       }
     };
