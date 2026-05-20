@@ -24,13 +24,13 @@ export default function conditionalRenderPlugin(R) {
     // 1. SETUP: Initialize the registry entry once
     if (!registry.has(el)) {
       const marker = document.createComment(uniqid("s-if", 5));
-
-      el.replaceWith(marker);
       registry.set(el, {
         marker,
         realm: null,
         lastResult: null, // Track the toggle context
       });
+
+      el.replaceWith(marker);
     }
 
     const render = () => {

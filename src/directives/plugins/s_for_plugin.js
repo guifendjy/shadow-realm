@@ -31,8 +31,23 @@ export default function dynamicRenderingPlugin(P) {
       });
     }
 
+    // data
     const data = registry.get(el);
-    const [itemName, listName] = expression.split(" in ").map((v) => v.trim());
+
+    // Regex looks for optional parentheses and splits at the comma if present
+    const match = expression.match(
+      /^(?:\(([^,]+),\s*([^)]+)\)|([^() ]+))\s+in\s+(.+)$/,
+    );
+
+    if (!match) console.error("Invalid expression format");
+    // If the parenthesized (item, index) pattern matched:
+    // match[1] = itemName, match[2] = indexName, match[4] = listName
+    // If the simple item pattern matched:
+    // match[3] = itemName, match[4] = listName
+    const itemName = (match[1] || match[3]).trim();
+    const indexName = match[2] ? match[2].trim() : "$index"; // default fallback if omitted
+    const listName = match[4].trim();
+
     const items = execute(listName) || [];
 
     // The engine now returns a Map of { key: { type } }
@@ -62,7 +77,7 @@ export default function dynamicRenderingPlugin(P) {
       if (instr.type === "add") {
         const nodeState = context.extendContext({
           [itemName]: item,
-          $index: index,
+          [indexName]: index,
         });
 
         const nodeToRender = el.content.cloneNode(true).firstElementChild;
@@ -89,7 +104,7 @@ export default function dynamicRenderingPlugin(P) {
           if (instr.patch) {
             // queue initialization
             realmQueue.add(() => {
-              entry.realm.context.signals.$index.value = index;
+              entry.realm.context.signals[indexName].value = index;
               entry.realm.context.signals[itemName].value = item;
             });
           }

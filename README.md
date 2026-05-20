@@ -109,8 +109,26 @@ Shadow.directive("s-tooltip", ({ el, expression, execute }) => {
 | `el`            | The DOM element the directive is on                      |
 | `expression`    | The raw attribute value string                           |
 | `value`         | The updated signal value (when a reactive token changed) |
-| `context`       | The element's raw state context                          |
+| `context`       | The context the element is in.                           |
 | `execute(expr)` | Evaluates an expression string in the element's scope    |
+
+**Using extendContext**
+The extendContext method is a pure function: it does not modify the original context. Instead, it returns a new context object that includes your additional data. This is used specifically when you want to use the result of the expression within the template of the targeted node.
+
+```js
+R.directive("s-**", ({ el, expression, execute, context }) => {
+  // 1. Evaluate the expression provided in s-**="expression"
+  const result = execute(expression);
+
+  // 2. Create a NEW context that includes this result.
+  // We extend the context so the child nodes can access '$match'
+  const branchedContext = context.extendContext({ $match: result });
+
+  // 3. Initialize the Realm with the extended context
+  // The child template can now use s-text="$match"
+  const realm = new Realm(node, branchedContext);
+});
+```
 
 ### `Shadow.use(pluginFn)` → `Shadow`
 
@@ -202,6 +220,41 @@ Sets the `value` property of a form element.
 
 Toggles visibility. Preserves the element's original `display` value and keeps `aria-hidden` in sync.
 
+### `s-switch`
+
+The s-switch directive allows for conditional rendering of elements based on a matching expression. It functions similarly to a JavaScript switch statement, rendering only the branch that matches the provided value.
+
+**Usage:**
+The directive must be placed on a <template> tag. Inside that template, you define different branches using the case attribute. You can also define a fallback using the default attribute.
+
+```html
+<div s-state="{ active: 0 }">
+  <template s-switch="active">
+    <div case="0">
+      <!-- This content renders when active == 0 -->
+      <button
+        s-state="{ count: 0 }"
+        on:click="count++"
+        s-text="'Count is: ' + count"></button>
+    </div>
+
+    <div case="1">
+      <p>Case 1 is active.</p>
+    </div>
+
+    <div case="2">
+      <p>Case 2 is active.</p>
+    </div>
+
+    <div default>
+      <p>This appears if active doesn't match 0, 1, or 2.</p>
+    </div>
+  </template>
+
+  <button on:click="active++">Next Case</button>
+</div>
+```
+
 ```html
 <div s-show="isLoggedIn">Welcome!</div>
 ```
@@ -248,7 +301,21 @@ Renders a list from a `<template>`, using an LCS diff to minimize DOM operations
 
 ```html
 <template s-for="item in items">
-  <li s-text="item.name"></li>
+  <div>
+    <p s-text="item.name"></p>
+    <p s-text="$index"></p>
+  </div>
+</template>
+```
+
+Override `$index`.
+
+```html
+<template s-for="(item, indexName) in items">
+  <div>
+    <p s-text="item.name"></p>
+    <p s-text="indexName"></p>
+  </div>
 </template>
 ```
 
@@ -296,16 +363,6 @@ Sets the element's `id` attribute dynamically.
 <section s-id="'section-' + index"></section>
 ```
 
-### `s-key`
-
-Sets a `key` attribute on an element, used as a stable identity hint inside `s-for` lists.
-
-```html
-<template s-for="item in items">
-  <div s-key="item.id" s-text="item.name"></div>
-</template>
-```
-
 ### `s-scroll-text`
 
 Animates text changes with a vertical slide transition.
@@ -324,25 +381,26 @@ Renders a Markdown string as HTML. Requires [marked](https://github.com/markedjs
 
 ### Directive Quick Reference
 
-| Attribute       | Value             | Reactive | Description                       |
-| --------------- | ----------------- | -------- | --------------------------------- |
-| `s-state`       | JS object literal | —        | Declares reactive state scope     |
-| `s-text`        | Expression        | ✅       | Sets `textContent`                |
-| `s-value`       | Expression        | ✅       | Sets `.value`                     |
-| `s-show`        | Expression        | ✅       | Toggles visibility                |
-| `s-class`       | Object or string  | ✅       | Adds/removes classes              |
-| `s-style`       | Object or string  | ✅       | Applies inline styles             |
-| `s-if`          | Expression        | ✅       | Conditional render (`<template>`) |
-| `s-for`         | `item in list`    | ✅       | List render (`<template>`)        |
-| `s-effect`      | Expression        | —        | On-mount side effect              |
-| `s-src`         | Expression        | ✅       | Sets `src` safely                 |
-| `s-disabled`    | Expression        | ✅       | Sets `disabled`                   |
-| `s-ref`         | Identifier        | —        | Registers in `$refs`              |
-| `s-id`          | Expression        | ✅       | Sets `id`                         |
-| `s-key`         | Expression        | ✅       | Sets `key`                        |
-| `s-scroll-text` | Expression        | ✅       | Animated text swap                |
-| `s-markdown`    | Expression        | ✅       | Renders Markdown                  |
-| `on:[event]`    | Expression        | —        | DOM event listener                |
+| Attribute             | Value             | Reactive | Description                                                    |
+| --------------------- | ----------------- | -------- | -------------------------------------------------------------- |
+| `s-state`             | JS object literal | —        | Declares reactive state scope                                  |
+| `s-text`              | Expression        | ✅       | Sets `textContent`                                             |
+| `s-value`             | Expression        | ✅       | Sets `.value`                                                  |
+| `s-show`              | Expression        | ✅       | Toggles visibility                                             |
+| `s-switch`            | Expression        | ✅       | renders elements based on a matching expression (`<template>`) |
+| `s-class`             | Object or string  | ✅       | Adds/removes classes                                           |
+| `s-style`             | Object or string  | ✅       | Applies inline styles                                          |
+| `s-if`                | Expression        | ✅       | Conditional render (`<template>`)                              |
+| `s-for`               | `item in list`    | ✅       | List render (`<template>`)                                     |
+| `s-effect`            | Expression        | —        | On-mount side effect                                           |
+| `s-effect-[modifier]` | Expression        | -        | add a modifier to create custom side effect                    |
+| `s-src`               | Expression        | ✅       | Sets `src` safely                                              |
+| `s-disabled`          | Expression        | ✅       | Sets `disabled`                                                |
+| `s-ref`               | Identifier        | —        | Registers in `$refs`                                           |
+| `s-id`                | Expression        | ✅       | Sets `id`                                                      |
+| `s-scroll-text`       | Expression        | ✅       | Animated text swap                                             |
+| `s-markdown`          | Expression        | ✅       | Renders Markdown                                               |
+| `on:[event]`          | Expression        | —        | DOM event listener                                             |
 
 ---
 

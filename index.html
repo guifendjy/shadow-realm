@@ -58,6 +58,13 @@
             s-style="{ transform: $store.theme.dark ? 'translateX(1.2rem)' : 'translateX(0.2rem)' }"></span>
     </button>
 
+    <div s-state="{array: Array(10).fill(0)}">
+        <template s-for="item in array">
+            <div s-text="item + $index">
+            </div>
+        </template>
+    </div>
+
 
     <div class="dark:text-white" s-state="Example([1,2,3,4,5], 1)">
         <div class="flex gap-2 mb-3">
@@ -73,7 +80,22 @@
         </div>
     </div>
 
-    
+    <div s-state="{active: 0}" class="text-white p-5">
+        <template s-switch="active">
+            <div case="0">
+                <button class="px-2 py-1 border" s-state="{count: 0}" on:click="count++"
+                    s-text="'count is: ' + count"></button>
+            </div>
+            <div case="1">1</div>
+            <div case="2">2</div>
+            <div default>default case</div>
+        </template>
+        <button on:click="()=>{
+            if(active >= 2) active = -1
+            active++
+        }">change case</button>
+    </div>
+
 
     <!-- <div class="flex items-center gap-2">
         <p class="text-lg font-bold dark:text-white" s-text="$store.CounterStore.counter.count"></p>
@@ -136,7 +158,7 @@
 
 
     <!-- NESTED STATE DEMO -->
-    <div class="bg-blue-100/50 border border-dashed border-gray-400 p-5 rounded w-100 m-auto my-10"
+    <!-- <div class="bg-blue-100/50 border border-dashed border-gray-400 p-5 rounded w-100 m-auto my-10"
         s-state="{count:0, increment(){this.count++}, decrement(){this.count--}, init(){this.count=10}}">
 
         <div class="p-4 bg-blue-100 border-2 border-blue-500 rounded-lg">
@@ -163,7 +185,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> -->
 
     <!-- S-if demo -->
     <!-- <div s-state="{isVisible:true}" id="app" class="min-h-screen bg-slate-900 text-slate-100 p-8 antialiased">
